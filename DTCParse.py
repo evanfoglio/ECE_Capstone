@@ -6,7 +6,7 @@ from datetime import datetime
 
 
 def errorCheck():
-	if len(sys.argv) != 2:
+	if len(sys.argv) != 7:
 		output = -1
 	#	sys.stdout.write('Not enough Args\n')
 #		print('Not enough args')
@@ -31,9 +31,11 @@ if __name__ == "__main__":
 	####
 		
 	#Simulate received request:
-	errorCheck()
+	if(errorCheck() < 0):
+		print("Not enough args")
+		sys.exit(0)
 	
-	x = sys.argv[1]
+	x = sys.argv
 	print(x)
 
 	#separate received string into individule values
