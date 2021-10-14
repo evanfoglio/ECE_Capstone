@@ -1,6 +1,10 @@
 #!/usr/bin/python
 import sys
 import re
+import sqlite3
+from datetime import datetime
+
+
 def errorCheck():
 	if len(sys.argv) != 2:
 		output = -1
@@ -45,7 +49,7 @@ if __name__ == "__main__":
          #case for codes but no light
 
 
-         intErrorCode = int(x[3], 16)
+	intErrorCode = int(x[3], 16)
 	if intErrorCode < 0x80:
 		#Check Engine Lamp or MIL is not on
 		nErrorCodes = x[3]	
@@ -70,7 +74,7 @@ if __name__ == "__main__":
 	#modify string to actually usable
 	
 
-	DTC_dict{ 
+	DTC_dict = { 
 		0x0:"P0",
 		0x1:"P1",
 		0x2:"P2",
@@ -89,23 +93,25 @@ if __name__ == "__main__":
 		0xF:"U3"}
 	
 			
-
+	#parsedDTC = 
+	#rawDTC = 
 	#export into SQL
+	try:
+	        sqlcon = sqlite3.connect("data.db")
+	        cursor = sqlcon.cursor()
+	        #insert collected data into the sqlite3 string
+	        insertdata = "insert into data(parsedData, rawData, time) values (\"{}\", \"{}\", \"{}\")".format("test", "Test", datetime.now())
+	        count = cursor.execute(insertdata)
+	        sqlcon.commit()
+	        cursor.close()
+	#Error checking
+	except sqlite3.Error as error:
+	        print("ERROR, ", error)
+	
+	finally:
+	        if sqlcon:
+	                sqlcon.close()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-}
 
 
 
