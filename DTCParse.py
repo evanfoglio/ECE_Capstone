@@ -115,6 +115,10 @@ if __name__ == "__main__":
 	prev_response = response
         client.loop()
         publish(client, "03")
+	while response == prev_response:
+                time.sleep(.1)
+                client.loop()
+	str_response = str(response)
 
 	#possible response:
 	#43 01 33 00 00 00 00
@@ -123,7 +127,13 @@ if __name__ == "__main__":
 	# 0133 0000 0000
 	#by standard it is padded with 0s, 0000 do not represent trouble codes
 	
-	
+	str_response = str_response.split()
+	if str_response[0] != "43"
+	        print("invalid response")
+	        sys.exit(0)
+	str_response.pop(0)
+	refined_response = [str_response[0] + str_response[1], str_response[2] + str_response[3], str_response[4] + str_response[5]]
+	refined_response = [i for i in refined_response if i != "0000"]	
 
 
 	DTC_dict = { 
@@ -147,6 +157,8 @@ if __name__ == "__main__":
 			
 	parsedDTC = "Test Dat" 
 	rawDTC = "Test Dat"
+	
+
 	#export into SQL
 	try:
 	        sqlcon = sqlite3.connect("data.db")
