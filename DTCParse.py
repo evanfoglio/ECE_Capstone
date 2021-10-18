@@ -1,22 +1,61 @@
 #!/usr/bin/python
 import sys
+import random
 import re
+import time
 import sqlite3
 from datetime import datetime
+from paho.mqtt import client as mqtt
+#MQTT#######################################################
+
+broker = "broker.mqtt-dashboard.com"
+port = 1883
+sendTopic = "OBDIIRec"
+receiveTopic = "OBDIISend"
+randomVal = random.randint(0, 1000)
+client_id = "python-mqtt-%d" % randomVal
+
+username = "emqx"
+password = "public"
+
+response = "init"
+
+def connect_mqtt():
+        def on_connect(client, userdata, flags, rc):
+                if rc == 0:
+                        print("Connected to MQTT Broker!")
+                else:
+                        print("Failed to connect, return code %d\n", rc)
+        # Set Connecting Client ID
+        client = mqtt.Client(client_id)
+        client.username_pw_set(username, password)
+        client.on_connect = on_connect
+        client.connect(broker, port)
+        return client
 
 
-def errorCheck():
-	if len(sys.argv) != 7:
-		output = -1
-	#	sys.stdout.write('Not enough Args\n')
-#		print('Not enough args')
-		return -1
-		#sys.exit(0)
-	else:
-		return 1
+def subscribe(client):
+        def on_message(client, userdata, msg):
+		message = "%s" % msg.payload.decode()
+		global response 
+		response = message
+        client.subscribe(receiveTopic)
+        client.on_message = on_message
+
+
+client = connect_mqtt()
+time.sleep(3)
+def publish(client, msg):
+        result = client.publish(sendTopic, msg)
+        # result: [0, 1]
+        status = result[0]
+        if status != 0:
+                print("Failed to send message")
+###########################################################
+
 
 if __name__ == "__main__":
-	
+
 	#Send Mode 1 PID 01 requset
 	# >01 01
 	#Typical Response:
@@ -25,24 +64,31 @@ if __name__ == "__main__":
 	####
 	#SEND REQUEST TBD
 	####
+
+	prev_response = response
+	client.loop()
+	publish(client, "01 01")
 	
 	####
-	# RECEIVE RESPONSE TBD
-	####
-		
-	#Simulate received request:
-	if(errorCheck() < 0):
-		print("Not enough args")
-		sys.exit(0)
+        # RECEIVE RESPONSE TBD
+        ####
+	subscribe(client)
+	while response == prev_response:
+		time.sleep(.1)
+		client.loop()	
 	
-	x = sys.argv
-	print(x)
+	#Respone comes as unicode,
+	str_response = str(response)
 
 	#separate received string into individule values
-	#x = x.split()
+	#Not needed for current simulations but will be needed in the future
+	split_response = str_response.split()
 	
-	x = sys.argv
-	if ((x[1] != '41') and (x[2] != '01')):
+	print(split_response[0])
+        print(split_response[1])
+	
+
+	if ((split_response[0] != '41') and (split_response[1] != '01')):
 		#invalid relpy
 		print("Invalid reply after first message")
 		sys.exit(0)
@@ -51,10 +97,10 @@ if __name__ == "__main__":
          #case for codes but no light
 
 
-	intErrorCode = int(x[3], 16)
+	intErrorCode = int(split_response[3], 16)
 	if intErrorCode < 0x80:
 		#Check Engine Lamp or MIL is not on
-		nErrorCodes = x[3]	
+		nErrorCodes = split_response[3]	
 	else:
 		#lights are on
         	nErrorCodes = intErrorCode - 0x80
@@ -66,6 +112,10 @@ if __name__ == "__main__":
 	# > 03
 	####
 
+	prev_response = response
+        client.loop()
+        publish(client, "03")
+
 	#possible response:
 	#43 01 33 00 00 00 00
 	# 43 says its a mode 3 response,
@@ -73,8 +123,8 @@ if __name__ == "__main__":
 	# 0133 0000 0000
 	#by standard it is padded with 0s, 0000 do not represent trouble codes
 	
-	#modify string to actually usable
 	
+
 
 	DTC_dict = { 
 		0x0:"P0",
@@ -95,8 +145,8 @@ if __name__ == "__main__":
 		0xF:"U3"}
 	
 			
-	#parsedDTC = 
-	#rawDTC = 
+	parsedDTC = "Test Dat" 
+	rawDTC = "Test Dat"
 	#export into SQL
 	try:
 	        sqlcon = sqlite3.connect("data.db")
