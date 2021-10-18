@@ -70,7 +70,7 @@ if __name__ == "__main__":
 	publish(client, "01 01")
 	
 	####
-        # RECEIVE RESPONSE TBD
+        # RECEIVE RESPONSE
         ####
 	subscribe(client)
 	while response == prev_response:
@@ -84,16 +84,13 @@ if __name__ == "__main__":
 	#Not needed for current simulations but will be needed in the future
 	split_response = str_response.split()
 	
-	print(split_response[0])
-        print(split_response[1])
-	
 
 	if ((split_response[0] != '41') and (split_response[1] != '01')):
 		#invalid relpy
 		print("Invalid reply after first message")
 		sys.exit(0)
 
-	 #case for 0 codes
+	 #need case for 0 codes
          #case for codes but no light
 
 
@@ -110,10 +107,11 @@ if __name__ == "__main__":
 
 	####
 	# > 03
-	####
+	###
 
 	prev_response = response
         client.loop()
+	#send 03 to Remote system to switch ELM327 Modes
         publish(client, "03")
 	while response == prev_response:
                 time.sleep(.1)
@@ -123,40 +121,44 @@ if __name__ == "__main__":
 	#possible response:
 	#43 01 33 00 00 00 00
 	# 43 says its a mode 3 response,
-	# Next 6 bytes are read in pairs,
-	# 0133 0000 0000
-	#by standard it is padded with 0s, 0000 do not represent trouble codes
 	
+	#error check, 43 indicates a response in mode 3
 	str_response = str_response.split()
-	if str_response[0] != "43"
+	if str_response[0] != '43':
 	        print("invalid response")
 	        sys.exit(0)
-	str_response.pop(0)
+	
+	# Next 6 bytes are read in pairs,
+        # Ex: 0133 0000 0000
+        #by standard it is padded with 0s, 0000 do not represent trouble codes
+	str_response.pop(0) # remove the first value, it is just used for confirmation
 	refined_response = [str_response[0] + str_response[1], str_response[2] + str_response[3], str_response[4] + str_response[5]]
 	refined_response = [i for i in refined_response if i != "0000"]	
 
 
 	DTC_dict = { 
-		0x0:"P0",
-		0x1:"P1",
-		0x2:"P2",
-		0x3:"P3",
-		0x4:"C0",
-		0x5:"C1",
-		0x6:"C2",
-		0x7:"C3",
-		0x8:"B0",
-		0x9:"B1",
-		0xA:"B2",
-		0xB:"B3",
-		0xC:"U0",
-		0xD:"U1",
-		0xE:"U2",
-		0xF:"U3"}
+		"0":"P0",
+		"1":"P1",
+		"2":"P2",
+		"3":"P3",
+		"4":"C0",
+		"5":"C1",
+		"6":"C2",
+		"7":"C3",
+		"8":"B0",
+		"9":"B1",
+		"A":"B2",
+		"B":"B3",
+		"C":"U0",
+		"D":"U1",
+		"E":"U2",
+		"F":"U3"}
 	
-			
-	parsedDTC = "Test Dat" 
-	rawDTC = "Test Dat"
+	#bytes of the retuen values are combined and decoded usinf the DTC_dict, values found
+	# in ELM327 data sheet
+	parsedDTC = [0, 0, 0]
+	for i in range(len(refined_response)): 
+		parsedDTC[i] = DTC_dict[refined_response[i][0]] + refined_response[i][1:]
 	
 
 	#export into SQL
