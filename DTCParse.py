@@ -134,25 +134,28 @@ if __name__ == "__main__":
 	# in ELM327 data sheet
 	parsedDTC = [0, 0, 0]
 	for i in range(len(refined_response)): 
-		parsedDTC[i] = DTC_dict[refined_response[i][0]] + refined_response[i][1:]
-	
+		parsedDTC[i] = DTC_dict[refined_response[i][0]] + refined_response[i][1:]	
 
-	#export into SQL
-	try:
-	        sqlcon = sqlite3.connect("data.db")
-	        cursor = sqlcon.cursor()
-	        #insert collected data into the sqlite3 string
-	        insertdata = "insert into data(parsedData, datetime) values (\"{}\", \"{}\")".format("test", datetime.now())
-	        count = cursor.execute(insertdata)
-	        sqlcon.commit()
-	        cursor.close()
-	#Error checking
-	except sqlite3.Error as error:
-	        print("ERROR, ", error)
-	
-	finally:
-	        if sqlcon:
-	                sqlcon.close()
+
+	for i in parsedDTC:
+		print(i)
+		if i != 0:
+			#export into SQL
+			try:
+			        sqlcon = sqlite3.connect("DTC.db")
+			        cursor = sqlcon.cursor()
+			        #insert collected data into the sqlite3 string
+			        insertdata = "insert into data(DTC, datetime) values (\"{}\", \"{}\")".format( i, datetime.now())
+			        count = cursor.execute(insertdata)
+			        sqlcon.commit()
+			        cursor.close()
+			#Error checking
+			except sqlite3.Error as error:
+			        print("ERROR, ", error)
+			
+			finally:
+			        if sqlcon:
+			                sqlcon.close()
 
 
 
