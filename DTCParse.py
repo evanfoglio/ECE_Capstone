@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import mqtt as m
 import sys
 import random
 import re
@@ -14,44 +15,19 @@ sendTopic = "OBDIIRec"
 receiveTopic = "OBDIISend"
 randomVal = random.randint(0, 1000)
 client_id = "python-mqtt-%d" % randomVal
-
 username = "emqx"
 password = "public"
+vol_response = "init"
 
-response = "init"
-
-def connect_mqtt():
-        def on_connect(client, userdata, flags, rc):
-                if rc == 0:
-                        print("Connected to MQTT Broker!")
-                else:
-                        print("Failed to connect, return code %d\n", rc)
-        # Set Connecting Client ID
-        client = mqtt.Client(client_id)
-        client.username_pw_set(username, password)
-        client.on_connect = on_connect
-        client.connect(broker, port)
-        return client
-
-
-def subscribe(client):
-        def on_message(client, userdata, msg):
-		message = "%s" % msg.payload.decode()
-		global response 
-		response = message
-        client.subscribe(receiveTopic)
-        client.on_message = on_message
-
-
-client = connect_mqtt()
+client = m.connect_mqtt(client_id, broker, port, username, password)
 time.sleep(3)
-def publish(client, msg):
-        result = client.publish(sendTopic, msg)
-        # result: [0, 1]
-        status = result[0]
-        if status != 0:
-                print("Failed to send message")
-###########################################################
+
+def on_message(client, userdata, msg):
+                message = "%s" % msg.payload.decode()
+                global vol_response
+                vol_response = message
+m.subscribe(client, "OBDIISend")
+client.on_message = on_message
 
 
 if __name__ == "__main__":
@@ -65,20 +41,20 @@ if __name__ == "__main__":
 	#SEND REQUEST TBD
 	####
 
-	prev_response = response
+	prev_response = vol_response
 	client.loop()
-	publish(client, "01 01")
+	m.publish(client, "OBDIIRec", "AT 01 01")
 	
 	####
         # RECEIVE RESPONSE
         ####
-	subscribe(client)
-	while response == prev_response:
+	m.subscribe(client, "OBDIISend")
+	while vol_response == prev_response:
 		time.sleep(.1)
 		client.loop()	
 	
 	#Respone comes as unicode,
-	str_response = str(response)
+	str_response = str(vol_response)
 
 	#separate received string into individule values
 	#Not needed for current simulations but will be needed in the future
@@ -109,14 +85,14 @@ if __name__ == "__main__":
 	# > 03
 	###
 
-	prev_response = response
+	prev_response = vol_response
         client.loop()
 	#send 03 to Remote system to switch ELM327 Modes
-        publish(client, "03")
-	while response == prev_response:
+        m.publish(client, "OBDIIRec","AT 03")
+	while vol_response == prev_response:
                 time.sleep(.1)
                 client.loop()
-	str_response = str(response)
+	str_response = str(vol_response)
 
 	#possible response:
 	#43 01 33 00 00 00 00
@@ -166,7 +142,7 @@ if __name__ == "__main__":
 	        sqlcon = sqlite3.connect("data.db")
 	        cursor = sqlcon.cursor()
 	        #insert collected data into the sqlite3 string
-	        insertdata = "insert into data(parsedData, rawData, time) values (\"{}\", \"{}\", \"{}\")".format("test", "Test", datetime.now())
+	        insertdata = "insert into data(parsedData, datetime) values (\"{}\", \"{}\")".format("test", datetime.now())
 	        count = cursor.execute(insertdata)
 	        sqlcon.commit()
 	        cursor.close()
