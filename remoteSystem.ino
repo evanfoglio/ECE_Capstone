@@ -1,5 +1,9 @@
 #include <ESP8266WiFi.h>
+#include <PubSubClient.h>
 
+#define MSG_BUFFER_SIZE  50
+
+//Wifi Credentials
 const char* ssid = "Foglio2.4"; //Wifi Name
 const char* password = "writerheight285";//Wifi password
 
@@ -11,30 +15,37 @@ const char *mqtt_password = "public";
 const int mqtt_port = 1883;
 
 
+WiFiClient espClient;
+PubSubClient client(espClient);
+
 void setup_wifi() {
   delay(10);
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
-
+  //wait for wifi to connect
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
   }
+	//LED turns on when wifi is connected
   digitalWrite(LED_BUILTIN, LOW);
 }
 
 int setup_Serial() {
-
+  Serial.begin(9600);
   
 }
 
 void setup_MQTT() {
   client.setServer(mqtt_broker, mqtt_port);
-  client.setCallback(callback);
   
 }
 
+String glob_message = "Initial Value";
 void callback(char* topic, byte* payload, unsigned int length) {
-
+  glob_message = "";
+  for (int i = 0; i < length; i++) {
+      glob_message[i] = (char) payload[i];
+  }
 }
 
 void reconnect() {
@@ -58,22 +69,36 @@ void reconnect() {
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT); 
   setup_wifi();
-  
+  setup_Serial();
+  setup_MQTT();
 }
 
 
-#define MSG_BUFFER_SIZE  (50)
-char msg[MSG_BUFFER_SIZE];
-int value = 0;
+
+
 void loop(void) {
   if (!client.connected()) {
     reconnect();
   }
-  
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.setCallback(callback);
+  client.subscribe("OBDIISend");  
+
+  char x[50];
+  int index = 0;
+  //Read UART input
+  while(Serial.available() > 0) {
+    x[index] = Serial.read();
+    index++;
+  }
+  if(index > 0) {
+    snprintf (msg, index, x);
+    client.publish("OBDIIRec", msg);
+    delay(1000);
+  }
+  delay(500);
   client.loop();
-  snprintf (msg, MSG_BUFFER_SIZE, "Test: #%d", value);
-  client.publish("OBDIIRec", msg);
-  value++;
-  delay(1000);
 }
   
