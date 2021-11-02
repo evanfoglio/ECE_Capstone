@@ -30,14 +30,9 @@ void setup_wifi() {
   digitalWrite(LED_BUILTIN, LOW);
 }
 
-int setup_Serial() {
-  Serial.begin(9600);
-  
-}
 
 void setup_MQTT() {
-  client.setServer(mqtt_broker, mqtt_port);
-  
+  client.setServer(mqtt_broker, mqtt_port);  
 }
 
 String glob_message = "Initial Value";
@@ -68,6 +63,7 @@ void reconnect() {
 
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT); 
+  Serial.begin(9600)
   setup_wifi();
   setup_Serial();
   setup_MQTT();
