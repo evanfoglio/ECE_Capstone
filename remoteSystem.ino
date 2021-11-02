@@ -3,6 +3,10 @@
 
 #define MSG_BUFFER_SIZE  50
 
+//initialize global string, this must be global so the callback 
+//interupt function and the main loop can have it in their scope
+char glob_message[MSG_BUFFER_SIZE] = "Initial Value";
+
 //Wifi Credentials
 const char* ssid = "Foglio2.4"; //Wifi Name
 const char* password = "writerheight285";//Wifi password
@@ -19,7 +23,8 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 
 void setup_wifi() {
-  delay(10);
+  //Make sure LED is off
+  digitalWrite(LED_BUILTIN, HIGH);
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   //wait for wifi to connect
@@ -35,7 +40,7 @@ void setup_MQTT() {
   client.setServer(mqtt_broker, mqtt_port);  
 }
 
-String glob_message = "Initial Value";
+
 void callback(char* topic, byte* payload, unsigned int length) {
   glob_message = "";
   for (int i = 0; i < length; i++) {
