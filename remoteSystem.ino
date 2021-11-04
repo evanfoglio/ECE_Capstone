@@ -35,15 +35,19 @@ void setup_wifi() {
   digitalWrite(LED_BUILTIN, LOW);
 }
 
-
+//initializes MQTT server, however it will not connect until the
+//reconnect function is run in the main loop.
 void setup_MQTT() {
   client.setServer(mqtt_broker, mqtt_port);  
 }
 
 
-void callback(char* topic, byte* payload, unsigned int length) {
-  glob_message = "";
-  for (int i = 0; i < length; i++) {
+void callback(char* topic, byte* payload, unsigned int msg_length) {
+  //When a MQTT message comes in, the gobal message variable is cleared out
+  memset(glob_message, 0, sizeof glob_message);
+  //Global message staores the most recent MQTT message
+  //Coppies 1 char at a time
+  for (int i = 0; i < msg_length; i++) {
       glob_message[i] = (char) payload[i];
   }
 }
@@ -56,7 +60,7 @@ void reconnect() {
     clientId += String(random(0xffff), HEX);
     // Attempt to connect
     if (client.connect(clientId.c_str())) {
-      // Once connected, publish an announcement...
+      // Once connected, publish an announcement
       //HERE IS WHAT HAPPENS IF WE RECONNECT
     } else {
       // Wait 5 seconds before retrying
@@ -65,10 +69,17 @@ void reconnect() {
   }
 }
 
+void serial_flush(void) {
+  if (Serial.available()) {
+    while (Serial.available()) Serial.read();
+  }
+}
 
 void setup() {
+  //Set LED on ESP12-S to an output
   pinMode(LED_BUILTIN, OUTPUT); 
-  Serial.begin(9600)
+  //Start serial communication using 9600 baud
+  Serial.begin(9600);
   setup_wifi();
   setup_Serial();
   setup_MQTT();
