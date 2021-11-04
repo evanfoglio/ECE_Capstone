@@ -39,15 +39,15 @@ Fuel_Type = []
 Engine_oil_temperature = []
 datetime = []
 for row in data:
-	Engine_coolant_temperature.append(row[0])
-	Fuel_pressure.append(row[1])
-	Engine_speed.append(row[2])
-	Vehicle_speed.append(row[3])
-	Intake_air_temperature.append(row[4])
-	Throttle_position.append(row[5])
-	Fuel_Tank_Level_Input.append(row[6])
-	Fuel_Type.append(row[7])
-	Engine_oil_temperature.append(row[8])
+	Engine_coolant_temperature.append(int(row[0]))
+	Fuel_pressure.append(int(row[1]))
+	Engine_speed.append(int(row[2]))
+	Vehicle_speed.append(int(row[3]))
+	Intake_air_temperature.append(int(row[4]))
+	Throttle_position.append(int(row[5]))
+	Fuel_Tank_Level_Input.append(int(row[6]))
+	Fuel_Type.append(int(row[7]))
+	Engine_oil_temperature.append(int(row[8]))
 	datetime.append(row[9])
 
 
