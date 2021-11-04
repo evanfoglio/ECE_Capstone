@@ -5,17 +5,70 @@ from tkinter import *
 from tkinter import ttk
 import os
 from PIL import ImageTk, Image
+#import imageUpdate
 
-def runDTC():
-	os.system('./DTCParse.py')
+def updateEngineCoolantTemp():
+        img = ImageTk.PhotoImage( Image.open("Engine_coolant_temperature.png"))
+        labelEngineCoolantTemp = ttk.Label(tabFFD1, image = img,  text= "Test")
+        labelEngineCoolantTemp.image = img
+        labelEngineCoolantTemp.grid(column=0, row=1)
+
+def updateFuelPressure():
+        img = ImageTk.PhotoImage( Image.open("Fuel_pressure.png"))
+        labelFuelPressure = ttk.Label(tabFFD2, image = img,  text= "Test")
+        labelFuelPressure.image = img
+        labelFuelPressure.grid(column=0, row=1)
 
 def updateEngineSpeed():
-	img = ImageTk.PhotoImage( Image.open("Engine_speed.png"))
-	labelEngSpeed = ttk.Label(tabFFD2, image = img,  text= "Test")
-	labelEngSpeed.image = img
-	labelEngSpeed.grid(column=0, row=1)
-	
+        img = ImageTk.PhotoImage( Image.open("Engine_speed.png"))
+        labelEngSpeed = ttk.Label(tabFFD3, image = img,  text= "Test")
+        labelEngSpeed.image = img
+        labelEngSpeed.grid(column=0, row=1)
 
+def updateVehicleSpeed():
+        img = ImageTk.PhotoImage( Image.open("Vehicle_speed.png"))
+        labelVehicleSpeed = ttk.Label(tabFFD4, image = img,  text= "Test")
+        labelVehicleSpeed.image = img
+        labelVehicleSpeed.grid(column=0, row=1)
+
+def updateIntakeAirTemperature():
+        img = ImageTk.PhotoImage( Image.open("Intake_air_temperature.png"))
+        labelIntakeAirTemperature = ttk.Label(tabFFD5, image = img,  text= "Test")
+        labelIntakeAirTemperature.image = img
+        labelIntakeAirTemperature.grid(column=0, row=1)
+
+def updateThrottlePosition():
+        img = ImageTk.PhotoImage( Image.open("Throttle_position.png"))
+        labelThrottlePosition = ttk.Label(tabFFD6, image = img,  text= "Test")
+        labelThrottlePosition.image = img
+        labelThrottlePosition.grid(column=0, row=1)
+
+def updateFuelTankLevelInput():
+        img = ImageTk.PhotoImage( Image.open("Fuel_Tank_Level_Input.png"))
+        labelFuelTankLevelInput = ttk.Label(tabFFD7, image = img,  text= "Test")
+        labelFuelTankLevelInput.image = img
+        labelFuelTankLevelInput.grid(column=0, row=1)
+
+def updateFuelType():
+        img = ImageTk.PhotoImage( Image.open("Fuel_Type.png"))
+        labelFuelType = ttk.Label(tabFFD8, image = img,  text= "Test")
+        labelFuelType.image = img
+        labelFuelType.grid(column=0, row=1)
+
+def updateEngineOilTemperature():
+        img = ImageTk.PhotoImage( Image.open("Engine_oil_temperature.png"))
+        labelEngineOilTemperature = ttk.Label(tabFFD9, image = img,  text= "Test")
+        labelEngineOilTemperature.image = img
+        labelEngineOilTemperature.grid(column=0, row=1)
+
+
+
+def runDTC():
+	os.system('./DTCParse.py')	
+
+def runFFD():
+	os.system('./test.py')
+	os.system('./createGraphs.py')
 #Create the Window
 window = Tk()
 
@@ -65,15 +118,33 @@ lblDTC.grid(column=0, row=0)
 lblFFD = ttk.Label(tabFFD, text= 'label2')
 lblFFD.grid(column=0, row=0)
 
-#create image on FFD1 tab
-img = ImageTk.PhotoImage( Image.open("Engine_coolant_temperature.png"))
-labeEngCool = ttk.Label(tabFFD1, image = img,  text= "Test")
-labeEngCool.image = img
-labeEngCool.grid(column=0, row=0)
+#Buttons added to each tab to update the graph
+FFD1Update = Button(tabFFD1, text="Update Graph", command=updateEngineCoolantTemp)
+FFD1Update.grid(column=0, row = 0)
 
-#####
-testbut = Button(tabFFD2, text="Update Graph", command=updateEngineSpeed)
-testbut.grid(column=0, row = 0)
+FFD2Update = Button(tabFFD2, text="Update Graph", command=updateFuelPressure)
+FFD2Update.grid(column=0, row = 0)
+
+FFD3Update = Button(tabFFD3, text="Update Graph", command=updateEngineSpeed)
+FFD3Update.grid(column=0, row = 0)
+
+FFD4Update = Button(tabFFD4, text="Update Graph", command=updateVehicleSpeed)
+FFD4Update.grid(column=0, row = 0)
+
+FFD5Update = Button(tabFFD5, text="Update Graph", command=updateIntakeAirTemperature)
+FFD5Update.grid(column=0, row = 0)
+
+FFD6Update = Button(tabFFD6, text="Update Graph", command=updateThrottlePosition)
+FFD6Update.grid(column=0, row = 0)
+
+FFD7Update = Button(tabFFD7, text="Update Graph", command=updateFuelTankLevelInput)
+FFD7Update.grid(column=0, row = 0)
+
+FFD8Update = Button(tabFFD8, text="Update Graph", command=updateFuelType)
+FFD8Update.grid(column=0, row = 0)
+
+FFD9Update = Button(tabFFD9, text="Update Graph", command=updateEngineOilTemperature)
+FFD9Update.grid(column=0, row = 0)
 
 
 #create label on RTD tab
@@ -92,6 +163,10 @@ quitButton.grid(column=5, row=5)
 
 DTCButton = Button(tabDTC, text="Look For Trouble Codes", command=runDTC)
 DTCButton.grid(column=0, row = 1)
+
+FFDCollect = Button(tabFFD, text="Collect New Data", command=runFFD)
+FFDCollect.grid(column=0, row = 0)
+
 
 window.mainloop()
 
