@@ -10,6 +10,9 @@ char glob_message[MSG_BUFFER_SIZE] = "Initial Value";
 //Wifi Credentials
 const char* ssid = "Foglio2.4"; //Wifi Name
 const char* password = "writerheight285";//Wifi password
+//const char* ssid = "Evans iphone";
+//const char* password = "12345678";
+
 
 // MQTT Broker
 const char *mqtt_broker = "broker.mqtt-dashboard.com";
@@ -89,28 +92,57 @@ void setup() {
 
 
 void loop(void) {
+//If MQTT client is not connected (First loop it is not) Connect 
   if (!client.connected()) {
     reconnect();
   }
-  if (!client.connected()) {
-    reconnect();
-  }
+  //Set the callback interupt function and the topic that receives the commands
   client.setCallback(callback);
-  client.subscribe("OBDIISend");  
+  client.subscribe("OBDIISend2");
 
-  char x[50];
+  //ATcommand is used to store the value of the global message so it does not change while it is being used
+  char ATcommand[MSG_BUFFER_SIZE];
+  
+  //used to compare and see if the current global message is a new message.
+  String prev_msg = glob_message;
+
+  //Waiting for MQTT message...
+  while (prev_msg == glob_message) {
+    delay(100);
+    //client.loop() updates the MQTT client
+    client.loop();
+  }
+
+  //remove all serial messages in the buffer
+  serial_flush();//the function of Serial.flush was changed in Arduino 1.0 to not actually flush the buffer
+  //coppy the global message contents into ATcommand array for printing
+  for (int i = 0; i < sizeof glob_message ; i++) {
+    ATcommand[i] = glob_message[i];
+
+  }
+  //Send the AT command to PCB
+  Serial.println(ATcommand);
+  
+  //Waiting for UART Response
+  while (!Serial.available()) {
+    delay(10);
+  }
+
+  char UART_Response[MSG_BUFFER_SIZE];
+  char msg[MSG_BUFFER_SIZE];
+  //index is used to count the size of the response
   int index = 0;
-  //Read UART input
-  while(Serial.available() > 0) {
-    x[index] = Serial.read();
+  //Reading UART
+  while (Serial.available() > 0) {
+    delay(10);
+    UART_Response[index] = Serial.read();
     index++;
   }
-  if(index > 0) {
-    snprintf (msg, index, x);
+  if (index > 0) { // if there was a response, publish the message
+    snprintf (msg, index, UART_Response);
     client.publish("OBDIIRec", msg);
-    delay(1000);
+    delay(100);
   }
-  delay(500);
+  //Message published
   client.loop();
 }
-  
