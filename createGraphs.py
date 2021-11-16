@@ -12,73 +12,71 @@ except sqlite3.Error as error:
 
 finally:
         if sqlcon:
-                cursor.execute("select * from data")#'select 
-				#Engine_coolant_temperature,
-				#Fuel_pressure, 
-				#Engine_speed, 
-				#Vehicle_speed, 
-				#Intake_air_temperature,
-				#Throttle_position,
-				#Fuel_Tank_Level_Input,
-				#Fuel_Type,
-				#datetime
-				#from data')
+                cursor.execute("select
+				Engine_coolant_temperature, 
+				Engine_RPM, 
+				Vehicle_speed, 
+				Intake_air_temperature,
+				Throttle_position,
+				Absolute_barometric_pressure,
+				Engine_oil_temperature,
+				datetime
+				from data;")
                 data = cursor.fetchall()
                 cursor.close()
                 sqlcon.close()
 
 #initialize arrays for data
 Engine_coolant_temperature = []
-Fuel_pressure = []
-Engine_speed = []
+Engine_RPM = []
 Vehicle_speed = []
 Intake_air_temperature = []
 Throttle_position = []
-Fuel_Tank_Level_Input = []
-Fuel_Type = []
+Calc_engine_load = []
+Absolute_barometric_pressure = []
 Engine_oil_temperature = []
 datetime = []
 for row in data:
 	Engine_coolant_temperature.append(int(row[0]))
 	Fuel_pressure.append(int(row[1]))
-	Engine_speed.append(int(row[2]))
+	Engine_RPM.append(int(row[2]))
 	Vehicle_speed.append(int(row[3]))
 	Intake_air_temperature.append(int(row[4]))
 	Throttle_position.append(int(row[5]))
-	Fuel_Tank_Level_Input.append(int(row[6]))
-	Fuel_Type.append(int(row[7]))
+	Calc_engine_load.append(int(row[6]))
+	Absolute_barometric_pressure.append(int(row[7]))
 	Engine_oil_temperature.append(int(row[8]))
 	datetime.append(row[9])
 
 
 data = [Engine_coolant_temperature, 
 	Fuel_pressure, 
-	Engine_speed, 
+	Engine_RPM, 
 	Vehicle_speed, 
 	Intake_air_temperature, 
 	Throttle_position, 
-	Fuel_Tank_Level_Input, 
-	Fuel_Type, 
+	Calc_engine_load, 
+	Absolute_barometric_pressure, 
 	Engine_oil_temperature]
 
 graph_labelsY = ["Temperature", 
 		"Pressure", 
-		"Speed", 
+		"RPM", 
 		"Speed", 
 		"Temperature", 
 		"Position", 
-		"Fuel_Tank_Level_Input", 
-		"Fuel_Type", 
+		"Calc_engine_load", 
+		"Absolute_barometric_pressure", 
 		"Temperature"]
 
 graph_titles = ["Engine_coolant_temperature", 
 		"Fuel_pressure", 
-		"Engine_speed", 
+		"Engine_RPM", 
 		"Vehicle_speed", 
 		"Intake_air_temperature", 
 		"Throttle_position", 
-		"Fuel_Tank_Level_Input",
-		"Fuel_Type",
+		"Calc_engine_load",
+		"Absolute_barometric_pressure",
 		"Engine_oil_temperature"]
 
 export_names = [s + ".png" for s in graph_titles]
