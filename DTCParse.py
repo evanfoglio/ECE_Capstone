@@ -11,8 +11,8 @@ from paho.mqtt import client as mqtt
 
 broker = "broker.mqtt-dashboard.com"
 port = 1883
-sendTopic = "OBDIIRec"
-receiveTopic = "OBDIISend"
+sendTopic = "OBDIISend2"
+receiveTopic = "OBDIIRec"
 randomVal = random.randint(0, 1000)
 client_id = "python-mqtt-%d" % randomVal
 username = "emqx"
@@ -20,14 +20,33 @@ password = "public"
 vol_response = "init"
 
 client = m.connect_mqtt(client_id, broker, port, username, password)
-time.sleep(3)
+#time.sleep(.5)
 
 def on_message(client, userdata, msg):
                 message = "%s" % msg.payload.decode()
                 global vol_response
                 vol_response = message
-m.subscribe(client, "OBDIISend")
+m.subscribe(client, "OBDIIRec")
 client.on_message = on_message
+
+def sql_export(dtc):
+	#export into SQL
+	try:
+		sqlcon = sqlite3.connect("DTC.db")
+		cursor = sqlcon.cursor()
+		#insert collected data into the sqlite3 string
+		insertdata = "insert into data(DTC, datetime) values (\"{}\", \"{}\")".format( dtc, datetime.now())
+		count = cursor.execute(insertdata)
+		sqlcon.commit()
+		cursor.close()
+	#Error checking
+	except sqlite3.Error as error:
+		print("ERROR, ", error)
+	
+	finally:
+		if sqlcon:
+			sqlcon.close()
+
 
 
 if __name__ == "__main__":
@@ -43,12 +62,12 @@ if __name__ == "__main__":
 
 	prev_response = vol_response
 	client.loop()
-	m.publish(client, "OBDIIRec", "AT 01 01")
+	m.publish(client, "OBDIISend2", "01 01")
 	
 	####
         # RECEIVE RESPONSE
         ####
-	m.subscribe(client, "OBDIISend")
+	m.subscribe(client, "OBDIIRec")
 	while vol_response == prev_response:
 		time.sleep(.1)
 		client.loop()	
@@ -61,14 +80,16 @@ if __name__ == "__main__":
 	split_response = str_response.split()
 	
 
-	if ((split_response[0] != '41') and (split_response[1] != '01')):
+	if ((split_response[2] != '41') and (split_response[3] != '01')):
 		#invalid relpy
 		print("Invalid reply after first message")
 		sys.exit(0)
 
 	 #need case for 0 codes
-         #case for codes but no light
-
+	if(split_response[4] == '00'):
+		code = "No Codes"
+		sql_export(code)
+		quit()
 
 	intErrorCode = int(split_response[3], 16)
 	if intErrorCode < 0x80:
@@ -81,14 +102,14 @@ if __name__ == "__main__":
 	#Find Actual trouble codes
 	#Send mode switch command
 
-	####
+	###
 	# > 03
 	###
 
 	prev_response = vol_response
         client.loop()
 	#send 03 to Remote system to switch ELM327 Modes
-        m.publish(client, "OBDIIRec","AT 03")
+        m.publish(client, "OBDIIRec","03")
 	while vol_response == prev_response:
                 time.sleep(.1)
                 client.loop()
@@ -138,43 +159,8 @@ if __name__ == "__main__":
 
 
 	for i in parsedDTC:
-		print(i)
 		if i != 0:
-			#export into SQL
-			try:
-			        sqlcon = sqlite3.connect("DTC.db")
-			        cursor = sqlcon.cursor()
-			        #insert collected data into the sqlite3 string
-			        insertdata = "insert into data(DTC, datetime) values (\"{}\", \"{}\")".format( i, datetime.now())
-			        count = cursor.execute(insertdata)
-			        sqlcon.commit()
-			        cursor.close()
-			#Error checking
-			except sqlite3.Error as error:
-			        print("ERROR, ", error)
-			
-			finally:
-			        if sqlcon:
-			                sqlcon.close()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+			sql_export(i)	
 
 
 
