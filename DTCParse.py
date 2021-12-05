@@ -20,7 +20,6 @@ password = "public"
 vol_response = "init"
 
 client = m.connect_mqtt(client_id, broker, port, username, password)
-#time.sleep(.5)
 
 def on_message(client, userdata, msg):
                 message = "%s" % msg.payload.decode()
@@ -73,22 +72,15 @@ if __name__ == "__main__":
 	
 	#Respone comes as unicode,
 	str_response = str(vol_response)
-	print(str_response)
+	
 	#separate received string into individule values
-	#Not needed for current simulations but will be needed in the future
 	split_response = str_response.split()
 	
-	#DEBUG
-	print("\nSplit: ")
-	print(split_response)	
-	
-	print("\nSplit[0]: ")
-        print(split_response[0])	
-
-
 	if ((split_response[2] != '41') and (split_response[3] != '01')):
 		#invalid relpy
-		print("Invalid reply after first message")
+		#print("Invalid reply after first message")
+		log("Invalid reply to 01 01 in DTCParse.py: " + str(split_response))
+		print("Invalid reply to 01 01 in DTCParse.py: " + str(split_response))
 		sys.exit(0)
 
 	#case for 0 codes
@@ -132,17 +124,20 @@ if __name__ == "__main__":
 	print(str_response)
 
 	if str_response[1] != '43':
-	        print("invalid response")
+		#log the error
+	        log("Invalid reply to 03 in DTCParse.py: " + str(str_response))
+                print("Invalid reply to 03 in DTCParse.py: " + str(str_response))
 	        sys.exit(0)
-	print(str_response)
+	
 	# Next 6 bytes are read in pairs,
         # Ex: 0133 0000 0000
         #by standard it is padded with 0s, 0000 do not represent trouble codes
 	str_response.pop(0) # remove the first value, it is just used for confirmation
 	refined_response = [str_response[0] + str_response[1], str_response[2] + str_response[3], str_response[4] + str_response[5]]
+	#clear out any 0000 codes
 	refined_response = [i for i in refined_response if i != "0000"]	
 
-
+	#first number represents a 2 char value, 
 	DTC_dict = { 
 		"0":"P0",
 		"1":"P1",
@@ -170,7 +165,8 @@ if __name__ == "__main__":
 	#combine codes into 1 string
 	combined_DTC = ""
 	for i in parsedDTC:
-		combined_DTC = combined_DTC + "\t" + i	
+		combined_DTC = combined_DTC + "\t" + i
+	#export codes to SQL db	
 	sql_export(combined_DTC)	
 
 
