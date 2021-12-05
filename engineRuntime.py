@@ -41,8 +41,11 @@ def two_byte_response(cmd):
 
         if response[2] != '41' and response[3] != cmd:
                 #bad response
-                print("Invalid response, exiting")
+		log("Invalid reply to 01 " + cmd + " in engineRuntime.py: " + str(response))
+                print("Invalid reply to 01 " + cmd + " in engineRuntime.py: " + str(response)
+
                 sys.exit(0)
+
         else:   #Return 3rd byte
                 return [response[4], response[5]]
 
