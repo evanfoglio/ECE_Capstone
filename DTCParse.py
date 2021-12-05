@@ -21,9 +21,12 @@ vol_response = "init"
 
 client = m.connect_mqtt(client_id, broker, port, username, password)
 
+#global message_flag to indicate a new message
+message_flag = False
 def on_message(client, userdata, msg):
                 message = "%s" % msg.payload.decode()
                 global vol_response
+		global message_flag = True
                 vol_response = message
 m.subscribe(client, "OBDIIRec")
 client.on_message = on_message
@@ -60,16 +63,18 @@ if __name__ == "__main__":
 	####
 	prev_response = vol_response
 	client.loop()
+	m.subscribe(client, "OBDIIRec")
 	m.publish(client, "OBDIISend2", "01 01")
 	
 	####
         # RECEIVE RESPONSE
         ####
-	m.subscribe(client, "OBDIIRec")
-	while vol_response == prev_response:
-		time.sleep(.1)
-		client.loop()	
 	
+	#wait for a new MQTT message
+	while (not message_flag):
+		client.loop()	
+	message_flag = False
+
 	#Respone comes as unicode,
 	str_response = str(vol_response)
 	
@@ -108,9 +113,10 @@ if __name__ == "__main__":
         client.loop()
 	#send 03 to Remote system to switch ELM327 Modes
         m.publish(client, "OBDIISend2", '03')
-	while vol_response == prev_response:
-                time.sleep(.1)
+	#wait for new MQTT message
+	while (not message_flag):
                 client.loop()
+	message_flag = False
 	str_response = str(vol_response)
 
 	#possible response:
