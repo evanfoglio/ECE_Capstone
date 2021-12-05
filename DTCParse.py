@@ -116,7 +116,7 @@ if __name__ == "__main__":
 	prev_response = vol_response
         client.loop()
 	#send 03 to Remote system to switch ELM327 Modes
-        m.publish(client, "OBDIIRec","03")
+        m.publish(client, "OBDIISend2", '03')
 	while vol_response == prev_response:
                 time.sleep(.1)
                 client.loop()
@@ -168,10 +168,11 @@ if __name__ == "__main__":
 	for i in range(len(refined_response)): 
 		parsedDTC[i] = DTC_dict[refined_response[i][0]] + refined_response[i][1:]	
 
-
+	#combine codes into 1 string
+	combined_DTC = ""
 	for i in parsedDTC:
-		if i != 0:
-			sql_export(i)	
+		combined_DTC = combined_DTC + "\t" + i	
+	sql_export(combined_DTC)	
 
 
 
