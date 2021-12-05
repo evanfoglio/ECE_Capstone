@@ -46,20 +46,19 @@ def sql_export(dtc):
 	finally:
 		if sqlcon:
 			sqlcon.close()
-
-
+def log(text):
+	#open log file with appened
+	f = open("log.txt", "a")
+	f.write(str(datetime.now())+ "\t"  + text + "\n")
 
 if __name__ == "__main__":
-	print("\n\n\n\n\n\n\n")
 	#Send Mode 1 PID 01 requset
 	# >01 01
 	#Typical Response:
 	#41 01 81 07 65 04
-	
 	####
 	#SEND REQUEST TBD
 	####
-
 	prev_response = vol_response
 	client.loop()
 	m.publish(client, "OBDIISend2", "01 01")
