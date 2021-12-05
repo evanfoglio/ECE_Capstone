@@ -7,6 +7,9 @@ import os
 from PIL import ImageTk, Image
 import time
 import sqlite3
+#import mqtt as m
+#from paho.mqtt import client as mqtt
+import random
 
 def updateEngineCoolantTemp():
         img = ImageTk.PhotoImage( Image.open("Engine Coolant Temperature.png"))
@@ -92,6 +95,9 @@ def updateRuntime():
 	lblRuntime = ttk.Label(tabEngRuntime, text=runtime)
 	lblRuntime.grid(column=1, row=0)	
 
+def clearDTC():
+	os.system('./clearDTC.py')	
+
 #Create the Window
 window = Tk()
 
@@ -174,9 +180,15 @@ quitButton.grid(column=5, row=5)
 DTCButton = Button(tabDTC, text="Look For Trouble Codes", command=runDTC)
 DTCButton.grid(column=0, row = 1)
 
+DTC_clear_Button = Button(tabDTC, text="Clear Trouble Codes", command=clearDTC)
+DTC_clear_Button.grid(column=0, row = 3)
+
 #create label on DTC tab
 lblDTC = ttk.Label(tabDTC, text= 'Codes will appear here')
 lblDTC.grid(column=0, row=0)
+
+lblDTC_clear = ttk.Label(tabDTC, text= '')
+lblDTC_clear.grid(column=0, row=2)
 
 lblRuntime = ttk.Label(tabEngRuntime, text='Value will appear here')
 lblRuntime.grid(column=0, row=0)
