@@ -19,9 +19,11 @@ vol_response = "init"
 client = m.connect_mqtt(client_id, broker, port, username, password)
 time.sleep(1)
 
+message_flag = False
 def on_message(client, userdata, msg):
                 message = "%s" % msg.payload.decode()
                 global vol_response
+		global message_flag = True
                 vol_response = message
 m.subscribe(client, "OBDIIRec")
 client.on_message = on_message
@@ -32,10 +34,10 @@ def two_byte_response(cmd):
         at_cmd = "01 %s" % cmd
         m.publish(client, "OBDIISend2", at_cmd)
 
-        #RECEIVE 41 cmd data
-        while vol_response == prev_response:
-                time.sleep(.1)
+        #wait for and RECEIVE 41 cmd data
+        while (not message_flag):
                 client.loop()
+	messgage_flag = False
 
         response = (str(vol_response)).split()
 
