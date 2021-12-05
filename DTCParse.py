@@ -50,7 +50,7 @@ def sql_export(dtc):
 
 
 if __name__ == "__main__":
-
+	print("\n\n\n\n\n\n\n")
 	#Send Mode 1 PID 01 requset
 	# >01 01
 	#Typical Response:
@@ -74,18 +74,25 @@ if __name__ == "__main__":
 	
 	#Respone comes as unicode,
 	str_response = str(vol_response)
-
+	print(str_response)
 	#separate received string into individule values
 	#Not needed for current simulations but will be needed in the future
 	split_response = str_response.split()
 	
+	#DEBUG
+	print("\nSplit: ")
+	print(split_response)	
+	
+	print("\nSplit[0]: ")
+        print(split_response[0])	
+
 
 	if ((split_response[2] != '41') and (split_response[3] != '01')):
 		#invalid relpy
 		print("Invalid reply after first message")
 		sys.exit(0)
 
-	 #need case for 0 codes
+	#case for 0 codes
 	if(split_response[4] == '00'):
 		code = "No Codes"
 		sql_export(code)
@@ -120,11 +127,15 @@ if __name__ == "__main__":
 	# 43 says its a mode 3 response,
 	
 	#error check, 43 indicates a response in mode 3
+	print(str_response)
 	str_response = str_response.split()
-	if str_response[0] != '43':
+	
+	print(str_response)
+
+	if str_response[1] != '43':
 	        print("invalid response")
 	        sys.exit(0)
-	
+	print(str_response)
 	# Next 6 bytes are read in pairs,
         # Ex: 0133 0000 0000
         #by standard it is padded with 0s, 0000 do not represent trouble codes
