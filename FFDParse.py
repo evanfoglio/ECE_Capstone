@@ -20,28 +20,38 @@ client = m.connect_mqtt(client_id, broker, port, username, password)
 time.sleep(1)
 
 
+#message_flag = False
+#def on_message(client, userdata, msg):
+#	message = "%s" % msg.payload.decode()
+#	global vol_response
+#	global message_flag
+#	vol_response = message
+#	message_flag = True
 
-message_flag = False
-def on_message(client, userdata, msg):
-	message = "%s" % msg.payload.decode()
-	global vol_response
+#m.subscribe(client, "OBDIIRec")
+#client.on_message = on_message
+
+def one_byte_response(cmd, client):
+
 	global message_flag
-	vol_response = message
-	message_flag = True
+	message_flag = False
+        #define the on_message callback function
+	def on_message(client, userdata, msg):
+		message = "%s" % msg.payload.decode()
+		global vol_response
+		global message_flag
+		message_flag = True
+		vol_response = message
+	client.on_message = on_message
 
-m.subscribe(client, "OBDIIRec")
-client.on_message = on_message
-
-def one_byte_response(cmd):
 	#SEND AT 01 cmd
-	prev_response = vol_response
 	at_cmd = "01 %s\n" % cmd
+	m.subscribe(client, "OBDIIRec")
 	m.publish(client, "OBDIISend2", at_cmd)
 	
 	#RECEIVE 41 cmd data
-	global message_flag
+	#global message_flag
 	while (not message_flag):
-                time.sleep(.1)
                 client.loop()
 	message_flag = False
 		
@@ -50,30 +60,41 @@ def one_byte_response(cmd):
 	if response[2] != '41' and response[3] != cmd:
 		#bad response
 		log("Invalid reply to 01 " + cmd + " in FFDParse.py: " + str(response))
-                print("Invalid reply to 01 " + cmd + " in FFDParse.py: " + str(response))
+		print("Invalid reply to 01 " + cmd + " in FFDParse.py: " + str(response))
 		sys.exit(0)
 	else:	#Return 3rd byte
 		return response[4]
 
-def two_byte_response(cmd):
-        #SEND AT 01 cmd
-	prev_response = vol_response
+def two_byte_response(cmd, client):
+        
+	global message_flag
+	message_flag = False
+	#define the on_message callback function
+	def on_message(client, userdata, msg):
+		message = "%s" % msg.payload.decode()
+		global vol_response
+		global message_flag
+		message_flag = True
+		vol_response = message
+	client.on_message = on_message
+
+
+	#SEND AT 01 cmd
 	at_cmd = "01 %s" % cmd
+	m.subscribe(client, "OBDIIRec")
 	m.publish(client, "OBDIISend2", at_cmd)
 
         #RECEIVE 41 cmd data
-	global message_flag
 	while (not message_flag):
-		time.sleep(.1)
 		client.loop()
 	message_flag = False
 	response = (str(vol_response)).split()
 
 	if response[2] != '41' and response[3] != cmd:
                 #bad response
-		log("Invalid reply to 01 " + cmd + " in FFDParse.py: " + str(response))
+                log("Invalid reply to 01 " + cmd + " in FFDParse.py: " + str(response))
                 print("Invalid reply to 01 " + cmd + " in FFDParse.py: " + str(response))
-		sys.exit(0)
+                sys.exit(0)
 	else:  	#Return 3rd byte
 		return [response[4], response[5]]
 
@@ -84,35 +105,57 @@ def log(text):
         f.write(str(datetime.now())+ "\t"  + text + "\n")
 
 
+def get_EngineCoolantTemp(client):
+	engine_coolant_temp = int(one_byte_response("05", client), 16) - 40
+	return engine_coolant_temp
+def get_EngineRPM(client):
+        engine_rpm_bytes = two_byte_response("0C", client)
+        engine_rpm_bytes[0] = int(engine_rpm_bytes[0], 16)
+        engine_rpm_bytes[1] = int(engine_rpm_bytes[1], 16)
+        engine_rpm = (256 * engine_rpm_bytes[0] + engine_rpm_bytes[1]) / 4
+        return engine_rpm
 
+def get_VehicleSpeed(client):
+	vehicle_speed = int(one_byte_response("0D", client), 16)
+	return vehicle_speed
+def get_IntakeAirTemp(client):
+	intake_air_temp = int(one_byte_response("0F", client), 16) - 40
+	return intake_air_temp
 
-if __name__ == "__main__":
-	
+def get_ThrottlePos(client):
+	throttle_position = int(one_byte_response("11", client), 16) * (100.0/255.0)
+	return throttle_position
+
+def get_EngineLoad(client):
+	calc_engine_load = int(one_byte_response("04", client), 16) * (100.0/255.0)
+	return calc_engine_load
+
+def get_AbsBarometricPressure(client):
+	absolute_barometric_pressure = int(one_byte_response("33", client)), client
+	return absolute_barometric_pressure
+
+def collectFFD(client):	
 
 	#find eningine coolant temp (degree C)
-	engine_coolant_temp = int(one_byte_response("05"), 16) - 40		
-	
-	#find Engine RPM	
-	engine_rpm_bytes = two_byte_response("0C")
-	engine_rpm_bytes[0] = int(engine_rpm_bytes[0], 16)
-	engine_rpm_bytes[1] = int(engine_rpm_bytes[1], 16)
-	engine_rpm = (256 * engine_rpm_bytes[0] + engine_rpm_bytes[1]) / 4
+	engine_coolant_temp = get_EngineCoolantTemp(client)
 
-	time.sleep(.1)
+	#find Engine RPM	
+	engine_rpm = get_EngineRPM(client)
+
 	#find vehicle speed (km/h)
-	vehicle_speed = int(one_byte_response("0D"), 16)
+	vehicle_speed = get_VehicleSpeed(client)
 	
 	#find intake air temp (degree C)
-	intake_air_temp = int(one_byte_response("0F"), 16) - 40
+	intake_air_temp = get_IntakeAirTemp(client)
 
 	#find throttle position (%)
-	throttle_position = int(one_byte_response("11"), 16) * (100.0/255.0)
+	throttle_position = get_ThrottlePos(client)
 	
 	#find the engine load (%)
-	calc_engine_load = int(one_byte_response("04"), 16) * (100.0/255.0)
+	calc_engine_load = get_EngineLoad(client)
 	
 	#find the absolute_barometric_pressure (kpa)
-	absolute_barometric_pressure = int(one_byte_response("33"))
+	absolute_barometric_pressure = get_AbsBarometricPressure(client)
 	
 	#export into SQL
 	try:
@@ -132,7 +175,7 @@ if __name__ == "__main__":
 		if sqlcon:
 			sqlcon.close()
 
-
+	return engine_coolant_temp, engine_rpm, vehicle_speed, intake_air_temp, throttle_position, calc_engine_load, absolute_barometric_pressure
 
 
 
