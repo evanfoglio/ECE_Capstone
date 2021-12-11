@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 import mqtt as m
 import sys
 import random
@@ -26,7 +26,8 @@ message_flag = False
 def on_message(client, userdata, msg):
                 message = "%s" % msg.payload.decode()
                 global vol_response
-		global message_flag = True
+                global message_flag 
+                message_flag = True
                 vol_response = message
 m.subscribe(client, "OBDIIRec")
 client.on_message = on_message
@@ -72,7 +73,7 @@ if __name__ == "__main__":
 	
 	#wait for a new MQTT message
 	while (not message_flag):
-		client.loop()	
+                client.loop()	
 	message_flag = False
 
 	#Respone comes as unicode,
@@ -110,9 +111,9 @@ if __name__ == "__main__":
 	###
 
 	prev_response = vol_response
-        client.loop()
+	client.loop()
 	#send 03 to Remote system to switch ELM327 Modes
-        m.publish(client, "OBDIISend2", '03')
+	m.publish(client, "OBDIISend2", '03')
 	#wait for new MQTT message
 	while (not message_flag):
                 client.loop()
@@ -130,10 +131,10 @@ if __name__ == "__main__":
 	print(str_response)
 
 	if str_response[1] != '43':
-		#log the error
-	        log("Invalid reply to 03 in DTCParse.py: " + str(str_response))
-                print("Invalid reply to 03 in DTCParse.py: " + str(str_response))
-	        sys.exit(0)
+	        #log the error
+		log("Invalid reply to 03 in DTCParse.py: " + str(str_response))
+		print("Invalid reply to 03 in DTCParse.py: " + str(str_response))
+		sys.exit(0)
 	
 	# Next 6 bytes are read in pairs,
         # Ex: 0133 0000 0000
