@@ -8,10 +8,11 @@ from PIL import ImageTk, Image
 import time
 import sqlite3
 import DTCParse as DTCP
-#from paho.mqtt import client as mqtt
 import mqtt as m
 import random
 from getLast import get_last
+import FFDParse as FFDP
+
 broker = "broker.mqtt-dashboard.com"
 port = 1883
 sendTopic = "OBDIISend2"
@@ -24,43 +25,43 @@ vol_response = "init"
 
 client = m.connect_mqtt(client_id, broker, port, username, password)
 
-def updateEngineCoolantTemp():
+def updateEngineCoolantTemp(engine_coolant_temp):
         img = ImageTk.PhotoImage( Image.open("Engine Coolant Temperature.png"))
         labelEngineCoolantTemp = ttk.Label(tabEngCoolant, image = img,  text= "Test")
         labelEngineCoolantTemp.image = img
         labelEngineCoolantTemp.grid(column=0, row=1)
 
-def updateEngineRPM():
+def updateEngineRPM(engine_rpm):
         img = ImageTk.PhotoImage( Image.open("Engine RPM.png"))
         labelEngSpeed = ttk.Label(tabEngRPM, image = img,  text= "Test")
         labelEngSpeed.image = img
         labelEngSpeed.grid(column=0, row=1)
 
-def updateVehicleSpeed():
+def updateVehicleSpeed(vehicle_speed):
         img = ImageTk.PhotoImage( Image.open("Vehicle Speed.png"))
         labelVehicleSpeed = ttk.Label(tabSpeed, image = img,  text= "Test")
         labelVehicleSpeed.image = img
         labelVehicleSpeed.grid(column=0, row=1)
 
-def updateIntakeAirTemperature():
+def updateIntakeAirTemperature(intake_air_temp):
         img = ImageTk.PhotoImage( Image.open("Intake Air Temperature.png"))
         labelIntakeAirTemperature = ttk.Label(tabIntakeAirTemp, image = img,  text= "Test")
         labelIntakeAirTemperature.image = img
         labelIntakeAirTemperature.grid(column=0, row=1)
 
-def updateThrottlePosition():
+def updateThrottlePosition(throttle_position):
         img = ImageTk.PhotoImage( Image.open("Throttle Position.png"))
         labelThrottlePosition = ttk.Label(tabThrotPos, image = img,  text= "Test")
         labelThrottlePosition.image = img
         labelThrottlePosition.grid(column=0, row=1)
 
-def updateCalcEngineLoad():
+def updateCalcEngineLoad(calc_engine_load):
         img = ImageTk.PhotoImage( Image.open("Calculated Engine Load.png"))
         labelCalcEngineLoad = ttk.Label(tabEngLoad, image = img,  text= "Test")
         labelCalcEngineLoad.image = img
         labelCalcEngineLoad.grid(column=0, row=1)
 
-def updateAbsoluteBarometricPressure():
+def updateAbsoluteBarometricPressure(absolute_barometric_pressure):
         img = ImageTk.PhotoImage( Image.open("Absolute Barometric Pressure.png"))
         labelFuelType = ttk.Label(tabBaroPres, image = img,  text= "Test")
         labelFuelType.image = img
@@ -79,8 +80,17 @@ def runDTC():
 	lblDTC.grid(column=0, row=0)
 
 def runFFD():
-	os.system('./FFDParse.py')
-	os.system('./createGraphs.py')
+	engine_coolant_temp, engine_rpm, vehicle_speed, intake_air_temp, throttle_position, calc_engine_load, absolute_barometric_pressure = FFDP.collectFFD(client)
+
+	updateEngineCoolantTemp(engine_coolant_temp)
+	updateEngineRPM(engine_rpm)
+	updateVehicleSpeed(vehicle_speed)
+	updateIntakeAirTemperature(intake_air_temp)
+	updateThrottlePosition(throttle_position)
+	updateCalcEngineLoad(calc_engine_load)
+	updateAbsoluteBarometricPressure(absolute_barometric_pressure)
+
+
 
 def updateRuntime():
 	os.system('./engineRuntime.py')
