@@ -6,31 +6,31 @@ import re
 import time
 import sqlite3
 from datetime import datetime
-from paho.mqtt import client as mqtt
+#from paho.mqtt import client as mqtt
 #MQTT#######################################################
 
-broker = "broker.mqtt-dashboard.com"
-port = 1883
-sendTopic = "OBDIISend2"
-receiveTopic = "OBDIIRec"
-randomVal = random.randint(0, 1000)
-client_id = "python-mqtt-%d" % randomVal
-username = "emqx"
-password = "public"
-vol_response = "init"
+#broker = "broker.mqtt-dashboard.com"
+#port = 1883
+#sendTopic = "OBDIISend2"
+#receiveTopic = "OBDIIRec"
+#randomVal = random.randint(0, 1000)
+#client_id = "python-mqtt-%d" % randomVal
+#username = "emqx"
+#password = "public"
+#vol_response = "init"
 
-client = m.connect_mqtt(client_id, broker, port, username, password)
+#client = m.connect_mqtt(client_id, broker, port, username, password)
 
 #global message_flag to indicate a new message
-message_flag = False
-def on_message(client, userdata, msg):
-                message = "%s" % msg.payload.decode()
-                global vol_response
-                global message_flag 
-                message_flag = True
-                vol_response = message
-m.subscribe(client, "OBDIIRec")
-client.on_message = on_message
+#message_flag = False
+#def on_message(client, userdata, msg):
+#                message = "%s" % msg.payload.decode()
+#                global vol_response
+#                global message_flag 
+#                message_flag = True
+#                vol_response = message
+#m.subscribe(client, "OBDIIRec")
+#client.on_message = on_message
 
 def sql_export(dtc):
 	#export into SQL
@@ -54,7 +54,25 @@ def log(text):
 	f = open("log.txt", "a")
 	f.write(str(datetime.now())+ "\t"  + text + "\n")
 
-if __name__ == "__main__":
+#if __name__ == "__main__":
+	
+
+#Returns a string
+def detectDTC(client):
+	#global message_flag to indicate a new message
+	global message_flag 
+	message_flag = False
+	#define the on_message callback function
+	def on_message(client, userdata, msg):
+                message = "%s" % msg.payload.decode()
+                global vol_response
+                global message_flag
+                message_flag = True
+                vol_response = message
+	client.on_message = on_message
+
+
+
 	#Send Mode 1 PID 01 requset
 	# >01 01
 	#Typical Response:
@@ -62,7 +80,8 @@ if __name__ == "__main__":
 	####
 	#SEND REQUEST TBD
 	####
-	prev_response = vol_response
+	#prev_response = vol_response
+	print("Before All")
 	client.loop()
 	m.subscribe(client, "OBDIIRec")
 	m.publish(client, "OBDIISend2", "01 01")
@@ -73,7 +92,7 @@ if __name__ == "__main__":
 	
 	#wait for a new MQTT message
 	while (not message_flag):
-                client.loop()	
+		client.loop()
 	message_flag = False
 
 	#Respone comes as unicode,
@@ -87,7 +106,8 @@ if __name__ == "__main__":
 		#print("Invalid reply after first message")
 		log("Invalid reply to 01 01 in DTCParse.py: " + str(split_response))
 		print("Invalid reply to 01 01 in DTCParse.py: " + str(split_response))
-		sys.exit(0)
+		#sys.exit(0)
+		
 
 	#case for 0 codes
 	if(split_response[4] == '00'):
