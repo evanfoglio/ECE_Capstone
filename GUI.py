@@ -69,9 +69,10 @@ def updateAbsoluteBarometricPressure():
 
 
 def runDTC():
-	os.system('./DTCParse.py')
-	DTC_code = get_last("DTC.db", "DTC")
-	DTC_code = str(DTC_code[0][0])	
+	#os.system('./DTCParse.py')
+	DTC_code = DTCP.detectDTC(client)
+	#DTC_code = get_last("DTC.db", "DTC")
+	#DTC_code = str(DTC_code[0][0])	
 	global lblDTC
 	lblDTC.destroy() 
 	lblDTC = ttk.Label(tabDTC, text=DTC_code)	
