@@ -7,9 +7,22 @@ import os
 from PIL import ImageTk, Image
 import time
 import sqlite3
-#import mqtt as m
+import DTCParse as DTCP
 #from paho.mqtt import client as mqtt
+import mqtt as m
 import random
+from getLast import get_last
+broker = "broker.mqtt-dashboard.com"
+port = 1883
+sendTopic = "OBDIISend2"
+receiveTopic = "OBDIIRec"
+randomVal = random.randint(0, 1000)
+client_id = "python-mqtt-%d" % randomVal
+username = "emqx"
+password = "public"
+vol_response = "init"
+
+client = m.connect_mqtt(client_id, broker, port, username, password)
 
 def updateEngineCoolantTemp():
         img = ImageTk.PhotoImage( Image.open("Engine Coolant Temperature.png"))
@@ -52,23 +65,6 @@ def updateAbsoluteBarometricPressure():
         labelFuelType = ttk.Label(tabBaroPres, image = img,  text= "Test")
         labelFuelType.image = img
         labelFuelType.grid(column=0, row=1)
-
-
-def get_last(db, data):
-
-	try:
-		sqlcon = sqlite3.connect(db)
-		cursor = sqlcon.cursor()
-	except sqlite3.Error as error:
-		print("ERROR, ", error)
-	
-	finally:
-		if sqlcon:
-			cursor.execute("select " + data + " from data order by datetime desc limit 1;")
-			last_val = cursor.fetchall()
-			cursor.close()
-			sqlcon.close()
-			return last_val
 
 
 
