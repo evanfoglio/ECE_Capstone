@@ -7,9 +7,16 @@ import os
 from PIL import ImageTk, Image
 import time
 import sqlite3
-import DTCParse as DTCP
 import mqtt as m
 import random
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
+
+
+
+import DTCParse as DTCP
 from getLast import get_last
 import FFDParse as FFDP
 
@@ -25,12 +32,34 @@ vol_response = "init"
 
 client = m.connect_mqtt(client_id, broker, port, username, password)
 
-def updateEngineCoolantTemp(engine_coolant_temp):
-        img = ImageTk.PhotoImage( Image.open("Engine Coolant Temperature.png"))
-        labelEngineCoolantTemp = ttk.Label(tabEngCoolant, image = img,  text= "Test")
-        labelEngineCoolantTemp.image = img
-        labelEngineCoolantTemp.grid(column=0, row=1)
+test_data_x = [1, 2, 3, 4, 5]
+test_data_y = [1, 2, 3, 7, 5]
+def plot(x,y, tab):
+	
+	fig = Figure(figsize = (5, 5), dpi = 100)
+	plot1 = fig.add_subplot(111)
 
+	plot1.plot(y)
+	canvas = FigureCanvasTkAgg(fig, master = tab)
+	canvas.draw()
+	canvas.get_tk_widget().pack()
+	toolbar = NavigationToolbar2Tk(canvas, tab)
+	toolbar.update()
+	canvas.get_tk_widget().pack()
+
+
+def updateEngineCoolantTemp():#engine_coolant_temp):
+	# Retrieve new data
+	time, engine_coolant_temp = FFDP.get_EngineCoolantTemp(client)
+	
+	test_data_x.append(time)
+	test_data_y.append(engine_coolant_temp)
+	
+	labelEngineCoolantTemp = ttk.Label(tabEngCoolant)
+	plot(test_data_x, test_data_y, tabEngCoolant)
+	for child in tabEngCoolant.winfo_children()[1:]:
+		child.destroy()
+	plot(test_data_x, test_data_y, tabEngCoolant)
 def updateEngineRPM(engine_rpm):
         img = ImageTk.PhotoImage( Image.open("Engine RPM.png"))
         labelEngSpeed = ttk.Label(tabEngRPM, image = img,  text= "Test")
@@ -148,7 +177,8 @@ lblCollectData.grid(column=0, row=0)
 
 #Buttons added to each tab to update the graph
 EngCoolantUpdate = Button(tabEngCoolant, text="Update Graph", command=updateEngineCoolantTemp)
-EngCoolantUpdate.grid(column=0, row = 0)
+#EngCoolantUpdate.grid(column=0, row = 0)
+EngCoolantUpdate.pack()
 
 EngRPMUpdate = Button(tabEngRPM, text="Update Graph", command=updateEngineRPM)
 EngRPMUpdate.grid(column=0, row = 0)
