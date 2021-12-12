@@ -32,13 +32,33 @@ vol_response = "init"
 
 client = m.connect_mqtt(client_id, broker, port, username, password)
 
-test_data_x = [1, 2, 3, 4, 5]
-test_data_y = [1, 2, 3, 7, 5]
+
+EngCoolant_x = []
+EngCoolant_y = []
+
+EngRPM_x = []
+EngRPM_y = []
+
+Speed_x = []
+Speed_y = []
+
+IntakeAirTemp_x = []
+IntakeAirTemp_y = []
+
+ThrotPos_x = []
+ThrotPos_y = []
+
+EngLoad_x = []
+EngLoad_y = []
+
+BaroPres_x = []
+BaroPres_y = []
+
+
 def plot(x,y, tab):
 	
 	fig = Figure(figsize = (5, 5), dpi = 100)
 	plot1 = fig.add_subplot(111)
-
 	plot1.plot(y)
 	canvas = FigureCanvasTkAgg(fig, master = tab)
 	canvas.draw()
@@ -51,55 +71,117 @@ def plot(x,y, tab):
 def updateEngineCoolantTemp():#engine_coolant_temp):
 	# Retrieve new data
 	time, engine_coolant_temp = FFDP.get_EngineCoolantTemp(client)
+
+	#append new data to the global array	
+	EngCoolant_x.append(time)
+	EngCoolant_y.append(engine_coolant_temp)
 	
-	test_data_x.append(time)
-	test_data_y.append(engine_coolant_temp)
-	
-	labelEngineCoolantTemp = ttk.Label(tabEngCoolant)
-	plot(test_data_x, test_data_y, tabEngCoolant)
+	#Destroy all the children on the tab, excluding the first element,
+	# the button to update the graph
 	for child in tabEngCoolant.winfo_children()[1:]:
 		child.destroy()
-	plot(test_data_x, test_data_y, tabEngCoolant)
-def updateEngineRPM(engine_rpm):
-        img = ImageTk.PhotoImage( Image.open("Engine RPM.png"))
-        labelEngSpeed = ttk.Label(tabEngRPM, image = img,  text= "Test")
-        labelEngSpeed.image = img
-        labelEngSpeed.grid(column=0, row=1)
+	#plot the new data on  the notebook tab
+	plot(EngCoolant_x, EngCoolant_y, tabEngCoolant)
 
-def updateVehicleSpeed(vehicle_speed):
-        img = ImageTk.PhotoImage( Image.open("Vehicle Speed.png"))
-        labelVehicleSpeed = ttk.Label(tabSpeed, image = img,  text= "Test")
-        labelVehicleSpeed.image = img
-        labelVehicleSpeed.grid(column=0, row=1)
+def updateEngineRPM():
+        # Retrieve new data
+        time, engine_rpm = FFDP.get_EngineRPM(client)
 
-def updateIntakeAirTemperature(intake_air_temp):
-        img = ImageTk.PhotoImage( Image.open("Intake Air Temperature.png"))
-        labelIntakeAirTemperature = ttk.Label(tabIntakeAirTemp, image = img,  text= "Test")
-        labelIntakeAirTemperature.image = img
-        labelIntakeAirTemperature.grid(column=0, row=1)
+        #append new data to the global array
+        EngRPM_x.append(time)
+        EngRPM_y.append(engine_rpm)
 
-def updateThrottlePosition(throttle_position):
-        img = ImageTk.PhotoImage( Image.open("Throttle Position.png"))
-        labelThrottlePosition = ttk.Label(tabThrotPos, image = img,  text= "Test")
-        labelThrottlePosition.image = img
-        labelThrottlePosition.grid(column=0, row=1)
+        #Destroy all the children on the tab, excluding the first element,
+        # the button to update the graph
+        for child in tabEngRPM.winfo_children()[1:]:
+                child.destroy()
+        #plot the new data on  the notebook tab
+        plot(EngRPM_x, EngRPM_y, tabEngRPM)
 
-def updateCalcEngineLoad(calc_engine_load):
-        img = ImageTk.PhotoImage( Image.open("Calculated Engine Load.png"))
-        labelCalcEngineLoad = ttk.Label(tabEngLoad, image = img,  text= "Test")
-        labelCalcEngineLoad.image = img
-        labelCalcEngineLoad.grid(column=0, row=1)
 
-def updateAbsoluteBarometricPressure(absolute_barometric_pressure):
-        img = ImageTk.PhotoImage( Image.open("Absolute Barometric Pressure.png"))
-        labelFuelType = ttk.Label(tabBaroPres, image = img,  text= "Test")
-        labelFuelType.image = img
-        labelFuelType.grid(column=0, row=1)
+def updateVehicleSpeed():
+        # Retrieve new data
+        time, vehicle_speed = FFDP.get_VehicleSpeed(client)
+
+        #append new data to the global array
+        Speed_x.append(time)
+        Speed_y.append(vehicle_speed)
+
+        #Destroy all the children on the tab, excluding the first element,
+        # the button to update the graph
+        for child in tabSpeed.winfo_children()[1:]:
+                child.destroy()
+        #plot the new data on  the notebook tab
+        plot(Speed_x, Speed_y, tabSpeed)
+
+
+def updateIntakeAirTemperature():
+        # Retrieve new data
+        time, intake_air_temp = FFDP.get_IntakeAirTemp(client)
+
+        #append new data to the global array
+        IntakeAirTemp_x.append(time)
+        IntakeAirTemp_y.append(intake_air_temp)
+
+        #Destroy all the children on the tab, excluding the first element,
+        # the button to update the graph
+        for child in tabIntakeAirTemp.winfo_children()[1:]:
+                child.destroy()
+        #plot the new data on  the notebook tab
+        plot(IntakeAirTemp_x, IntakeAirTemp_y, tabIntakeAirTemp)
+
+
+def updateThrottlePosition():
+        # Retrieve new data
+        time, throttle_position = FFDP.get_ThrottlePos(client)
+
+        #append new data to the global array
+        ThrotPos_x.append(time)
+        ThrotPos_y.append(throttle_position)
+
+        #Destroy all the children on the tab, excluding the first element,
+        # the button to update the graph
+        for child in tabThrotPos.winfo_children()[1:]:
+                child.destroy()
+        #plot the new data on  the notebook tab
+        plot(ThrotPos_x, ThrotPos_y, tabThrotPos)
+
+
+def updateCalcEngineLoad():
+        # Retrieve new data
+        time, calc_engine_load = FFDP.get_EngineLoad(client)
+
+        #append new data to the global array
+        EngLoad_x.append(time)
+        EngLoad_y.append(calc_engine_load)
+
+        #Destroy all the children on the tab, excluding the first element,
+        # the button to update the graph
+        for child in tabEngLoad.winfo_children()[1:]:
+                child.destroy()
+        #plot the new data on  the notebook tab
+        plot(EngLoad_x, EngLoad_y, tabEngLoad)
+
+
+def updateAbsoluteBarometricPressure():
+        # Retrieve new data
+        time, absolute_barometric_pressure = FFDP.get_AbsBarometricPressure(client)
+
+        #append new data to the global array
+        BaroPres_x.append(time)
+        BaroPres_y.append(absolute_barometric_pressure)
+
+        #Destroy all the children on the tab, excluding the first element,
+        # the button to update the graph
+        for child in tabBaroPres.winfo_children()[1:]:
+                child.destroy()
+        #plot the new data on  the notebook tab
+        plot(BaroPres_x, BaroPres_y, tabBaroPres)
+
 
 
 
 def runDTC():
-	#os.system('./DTCParse.py')
 	DTC_code = DTCP.detectDTC(client)
 	#DTC_code = get_last("DTC.db", "DTC")
 	#DTC_code = str(DTC_code[0][0])	
@@ -109,25 +191,23 @@ def runDTC():
 	lblDTC.grid(column=0, row=0)
 
 def runFFD():
-	engine_coolant_temp, engine_rpm, vehicle_speed, intake_air_temp, throttle_position, calc_engine_load, absolute_barometric_pressure = FFDP.collectFFD(client)
+	#engine_coolant_temp, engine_rpm, vehicle_speed, intake_air_temp, throttle_position, calc_engine_load, absolute_barometric_pressure = FFDP.collectFFD(client)
 
-	updateEngineCoolantTemp(engine_coolant_temp)
-	updateEngineRPM(engine_rpm)
-	updateVehicleSpeed(vehicle_speed)
-	updateIntakeAirTemperature(intake_air_temp)
-	updateThrottlePosition(throttle_position)
-	updateCalcEngineLoad(calc_engine_load)
-	updateAbsoluteBarometricPressure(absolute_barometric_pressure)
+	updateEngineCoolantTemp()
+	updateEngineRPM()
+	updateVehicleSpeed()
+	updateIntakeAirTemperature()
+	updateThrottlePosition()
+	updateCalcEngineLoad()
+	updateAbsoluteBarometricPressure()
 
 
 
 def updateRuntime():
-	os.system('./engineRuntime.py')
-	runtime = get_last("engineRuntime.db", "Engine_runtime")
+	runtime = FFDP.get_Runtime(client)
 	global lblRuntime
 	lblRuntime.destroy()
-	print(type(runtime[0][0]))
-	runtime = str(runtime[0][0]) + " Seconds" 
+	runtime = str(runtime) + " Seconds" 
 	lblRuntime = ttk.Label(tabEngRuntime, text=runtime)
 	lblRuntime.grid(column=1, row=0)	
 
@@ -178,25 +258,25 @@ lblCollectData.grid(column=0, row=0)
 #Buttons added to each tab to update the graph
 EngCoolantUpdate = Button(tabEngCoolant, text="Update Graph", command=updateEngineCoolantTemp)
 #EngCoolantUpdate.grid(column=0, row = 0)
-EngCoolantUpdate.pack()
+EngCoolantUpdate.pack()#
 
 EngRPMUpdate = Button(tabEngRPM, text="Update Graph", command=updateEngineRPM)
-EngRPMUpdate.grid(column=0, row = 0)
+EngRPMUpdate.pack()#.grid(column=0, row = 0)
 
 SpeedUpdate = Button(tabSpeed, text="Update Graph", command=updateVehicleSpeed)
-SpeedUpdate.grid(column=0, row = 0)
+SpeedUpdate.pack()#.grid(column=0, row = 0)
 
 IntakeAirTempUpdate = Button(tabIntakeAirTemp, text="Update Graph", command=updateIntakeAirTemperature)
-IntakeAirTempUpdate.grid(column=0, row = 0)
+IntakeAirTempUpdate.pack()#.grid(column=0, row = 0)
 
 ThrotPosUpdate = Button(tabThrotPos, text="Update Graph", command=updateThrottlePosition)
-ThrotPosUpdate.grid(column=0, row = 0)
+ThrotPosUpdate.pack()#.grid(column=0, row = 0)
 
 EngLoadUpdate = Button(tabEngLoad, text="Update Graph", command=updateCalcEngineLoad)
-EngLoadUpdate.grid(column=0, row = 0)
+EngLoadUpdate.pack()#.grid(column=0, row = 0)
 
 BaroPresUpdate = Button(tabBaroPres, text="Update Graph", command=updateAbsoluteBarometricPressure)
-BaroPresUpdate.grid(column=0, row = 0)
+BaroPresUpdate.pack()#.grid(column=0, row = 0)
 
 EngRuntimeUpdate = Button(tabEngRuntime, text="Update Value", command=updateRuntime)
 EngRuntimeUpdate.grid(column=0, row = 1)
