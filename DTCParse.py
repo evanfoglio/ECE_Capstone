@@ -6,31 +6,6 @@ import re
 import time
 import sqlite3
 from datetime import datetime
-#from paho.mqtt import client as mqtt
-#MQTT#######################################################
-
-#broker = "broker.mqtt-dashboard.com"
-#port = 1883
-#sendTopic = "OBDIISend2"
-#receiveTopic = "OBDIIRec"
-#randomVal = random.randint(0, 1000)
-#client_id = "python-mqtt-%d" % randomVal
-#username = "emqx"
-#password = "public"
-#vol_response = "init"
-
-#client = m.connect_mqtt(client_id, broker, port, username, password)
-
-#global message_flag to indicate a new message
-#message_flag = False
-#def on_message(client, userdata, msg):
-#                message = "%s" % msg.payload.decode()
-#                global vol_response
-#                global message_flag 
-#                message_flag = True
-#                vol_response = message
-#m.subscribe(client, "OBDIIRec")
-#client.on_message = on_message
 
 def sql_export(dtc):
 	#export into SQL
@@ -54,8 +29,6 @@ def log(text):
 	f = open("log.txt", "a")
 	f.write(str(datetime.now())+ "\t"  + text + "\n")
 
-#if __name__ == "__main__":
-	
 
 #Returns a string
 def detectDTC(client):
@@ -81,11 +54,10 @@ def detectDTC(client):
 	#SEND REQUEST TBD
 	####
 	#prev_response = vol_response
-	print("Before All")
 	client.loop()
 	m.subscribe(client, "OBDIIRec")
 	m.publish(client, "OBDIISend2", "01 01")
-	
+	print("Sent 01 01")
 	####
         # RECEIVE RESPONSE
         ####
@@ -97,7 +69,7 @@ def detectDTC(client):
 
 	#Respone comes as unicode,
 	str_response = str(vol_response)
-	
+	print(str_response)
 	#separate received string into individule values
 	split_response = str_response.split()
 	
@@ -107,13 +79,13 @@ def detectDTC(client):
 		log("Invalid reply to 01 01 in DTCParse.py: " + str(split_response))
 		print("Invalid reply to 01 01 in DTCParse.py: " + str(split_response))
 		#sys.exit(0)
-		
+		return "Error occured, please check the log.txt"		
 
 	#case for 0 codes
 	if(split_response[4] == '00'):
 		code = "No Codes"
 		sql_export(code)
-		quit()
+		return code
 
 	intErrorCode = int(split_response[3], 16)
 	if intErrorCode < 0x80:
@@ -154,7 +126,8 @@ def detectDTC(client):
 	        #log the error
 		log("Invalid reply to 03 in DTCParse.py: " + str(str_response))
 		print("Invalid reply to 03 in DTCParse.py: " + str(str_response))
-		sys.exit(0)
+		#sys.exit(0)
+		return "Error occured, please check the log.txt"
 	
 	# Next 6 bytes are read in pairs,
         # Ex: 0133 0000 0000
@@ -194,12 +167,39 @@ def detectDTC(client):
 	for i in parsedDTC:
 		combined_DTC = combined_DTC + "\t" + i
 	#export codes to SQL db	
-	sql_export(combined_DTC)	
+	sql_export(combined_DTC)
+	return combined_DTC	
 
 
+def clearDTC():	
+	#global message_flag to indicate a new message
+        global message_flag
+        message_flag = False
+        #define the on_message callback function
+        def on_message(client, userdata, msg):
+                message = "%s" % msg.payload.decode()
+                global vol_response
+                global message_flag
+                message_flag = True
+                vol_response = message
+        client.on_message = on_message
+        m.subscribe(client, "OBDIIRec")
+        client.on_message = on_message
 
+        m.publish(client, "OBDIISend2", "04")
 
+        while (not message_flag):
+                time.sleep(.1)
+                client.loop()
+        message_flag = False
 
+        response = (str(vol_response)).split()
+        if(response[1] != '44'):
+                log("Invalid reply to 04 in clearDTC.py: " + str(response))
+                print("Invalid reply to 04 in clearDTC.py: " + str(response))
+        else:
+                log("Codes have been successfully cleared")
+                print("Codes have been successfully cleared")
 
 
 
