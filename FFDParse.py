@@ -107,32 +107,39 @@ def log(text):
 
 def get_EngineCoolantTemp(client):
 	engine_coolant_temp = int(one_byte_response("05", client), 16) - 40
-	return engine_coolant_temp
+	return datetime.now, engine_coolant_temp
 def get_EngineRPM(client):
         engine_rpm_bytes = two_byte_response("0C", client)
         engine_rpm_bytes[0] = int(engine_rpm_bytes[0], 16)
         engine_rpm_bytes[1] = int(engine_rpm_bytes[1], 16)
         engine_rpm = (256 * engine_rpm_bytes[0] + engine_rpm_bytes[1]) / 4
-        return engine_rpm
+        return datetime.now, engine_rpm
 
 def get_VehicleSpeed(client):
 	vehicle_speed = int(one_byte_response("0D", client), 16)
-	return vehicle_speed
+	return datetime.now, vehicle_speed
 def get_IntakeAirTemp(client):
 	intake_air_temp = int(one_byte_response("0F", client), 16) - 40
-	return intake_air_temp
+	return datetime.now, intake_air_temp
 
 def get_ThrottlePos(client):
 	throttle_position = int(one_byte_response("11", client), 16) * (100.0/255.0)
-	return throttle_position
+	return datetime.now, throttle_position
 
 def get_EngineLoad(client):
 	calc_engine_load = int(one_byte_response("04", client), 16) * (100.0/255.0)
-	return calc_engine_load
+	return datetime.now, calc_engine_load
 
 def get_AbsBarometricPressure(client):
-	absolute_barometric_pressure = int(one_byte_response("33", client)), client
-	return absolute_barometric_pressure
+	absolute_barometric_pressure = int(one_byte_response("33", client))
+	return datetime.now, absolute_barometric_pressure
+
+def get_Runtime(client):
+        engine_runtime_bytes = two_byte_response("1F", client)
+        engine_runtime_bytes[0] = int(engine_runtime_bytes[0], 16)
+        engine_runtime_bytes[1] = int(engine_runtime_bytes[1], 16)
+        engine_runtime = (256 * engine_runtime_bytes[0]) + engine_runtime_bytes[1]
+        return engine_runtime
 
 def collectFFD(client):	
 
