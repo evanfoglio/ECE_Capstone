@@ -14,12 +14,11 @@ import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 
-
-
 import DTCParse as DTCP
 from getLast import get_last
 import FFDParse as FFDP
 
+#Broker Credentials
 broker = "broker.mqtt-dashboard.com"
 port = 1883
 sendTopic = "OBDIISend2"
@@ -30,11 +29,12 @@ username = "emqx"
 password = "public"
 vol_response = "init"
 
+#client is passed to functions wanting to connect to the remote system
 client = m.connect_mqtt(client_id, broker, port, username, password)
 
-
-EngCoolant_x = []
-EngCoolant_y = []
+#Global array variables for each type of data collected
+EngCoolant_x = [1, 2, 3, 4, 5, 6, 9]
+EngCoolant_y = [2, 4 ,6 ,8  ,4, 12, 14]
 
 EngRPM_x = []
 EngRPM_y = []
@@ -54,12 +54,15 @@ EngLoad_y = []
 BaroPres_x = []
 BaroPres_y = []
 
-
-def plot(x,y, tab):
+#plotting function takes in the x,y data as well as the tab 
+# the plot is to go on
+def plot(x, y, tab, ylabel):
 	
 	fig = Figure(figsize = (5, 5), dpi = 100)
 	plot1 = fig.add_subplot(111)
-	plot1.plot(y)
+	plot1.plot(x,y)
+	plot1.set_ylabel(ylabel)
+	plot1.set_xlabel("Time")
 	canvas = FigureCanvasTkAgg(fig, master = tab)
 	canvas.draw()
 	canvas.get_tk_widget().pack()
@@ -70,8 +73,9 @@ def plot(x,y, tab):
 
 def updateEngineCoolantTemp():#engine_coolant_temp):
 	# Retrieve new data
-	time, engine_coolant_temp = FFDP.get_EngineCoolantTemp(client)
-
+	#time, engine_coolant_temp = FFDP.get_EngineCoolantTemp(client)
+	time = 15
+	engine_coolant_temp = 8
 	#append new data to the global array	
 	EngCoolant_x.append(time)
 	EngCoolant_y.append(engine_coolant_temp)
@@ -81,7 +85,7 @@ def updateEngineCoolantTemp():#engine_coolant_temp):
 	for child in tabEngCoolant.winfo_children()[1:]:
 		child.destroy()
 	#plot the new data on  the notebook tab
-	plot(EngCoolant_x, EngCoolant_y, tabEngCoolant)
+	plot(EngCoolant_x, EngCoolant_y, tabEngCoolant, "Degree Celsius")
 
 def updateEngineRPM():
         # Retrieve new data
@@ -96,7 +100,7 @@ def updateEngineRPM():
         for child in tabEngRPM.winfo_children()[1:]:
                 child.destroy()
         #plot the new data on  the notebook tab
-        plot(EngRPM_x, EngRPM_y, tabEngRPM)
+        plot(EngRPM_x, EngRPM_y, tabEngRPM, "RPM")
 
 
 def updateVehicleSpeed():
@@ -112,7 +116,7 @@ def updateVehicleSpeed():
         for child in tabSpeed.winfo_children()[1:]:
                 child.destroy()
         #plot the new data on  the notebook tab
-        plot(Speed_x, Speed_y, tabSpeed)
+        plot(Speed_x, Speed_y, tabSpeed, "Km/h")
 
 
 def updateIntakeAirTemperature():
@@ -128,7 +132,7 @@ def updateIntakeAirTemperature():
         for child in tabIntakeAirTemp.winfo_children()[1:]:
                 child.destroy()
         #plot the new data on  the notebook tab
-        plot(IntakeAirTemp_x, IntakeAirTemp_y, tabIntakeAirTemp)
+        plot(IntakeAirTemp_x, IntakeAirTemp_y, tabIntakeAirTemp, "Degree Celsius")
 
 
 def updateThrottlePosition():
@@ -144,7 +148,7 @@ def updateThrottlePosition():
         for child in tabThrotPos.winfo_children()[1:]:
                 child.destroy()
         #plot the new data on  the notebook tab
-        plot(ThrotPos_x, ThrotPos_y, tabThrotPos)
+        plot(ThrotPos_x, ThrotPos_y, tabThrotPos, "%")
 
 
 def updateCalcEngineLoad():
@@ -160,7 +164,7 @@ def updateCalcEngineLoad():
         for child in tabEngLoad.winfo_children()[1:]:
                 child.destroy()
         #plot the new data on  the notebook tab
-        plot(EngLoad_x, EngLoad_y, tabEngLoad)
+        plot(EngLoad_x, EngLoad_y, tabEngLoad, "%")
 
 
 def updateAbsoluteBarometricPressure():
@@ -176,11 +180,11 @@ def updateAbsoluteBarometricPressure():
         for child in tabBaroPres.winfo_children()[1:]:
                 child.destroy()
         #plot the new data on  the notebook tab
-        plot(BaroPres_x, BaroPres_y, tabBaroPres)
+        plot(BaroPres_x, BaroPres_y, tabBaroPres, "KPa")
 
 
 
-
+#runDTC finds trouble codes and updates the label on the DTC notebook tab
 def runDTC():
 	DTC_code = DTCP.detectDTC(client)
 	#DTC_code = get_last("DTC.db", "DTC")
@@ -190,8 +194,8 @@ def runDTC():
 	lblDTC = ttk.Label(tabDTC, text=DTC_code)	
 	lblDTC.grid(column=0, row=0)
 
+#runFFD runs all the update data functions allowing faster data collection 
 def runFFD():
-	#engine_coolant_temp, engine_rpm, vehicle_speed, intake_air_temp, throttle_position, calc_engine_load, absolute_barometric_pressure = FFDP.collectFFD(client)
 
 	updateEngineCoolantTemp()
 	updateEngineRPM()
@@ -202,32 +206,33 @@ def runFFD():
 	updateAbsoluteBarometricPressure()
 
 
-
+#Retrives the current engine runtime and updates the label on Engine Runtime tab
 def updateRuntime():
 	runtime = FFDP.get_Runtime(client)
 	global lblRuntime
+	#destroy the old label
 	lblRuntime.destroy()
+	#add units
 	runtime = str(runtime) + " Seconds" 
+	#create the new label
 	lblRuntime = ttk.Label(tabEngRuntime, text=runtime)
 	lblRuntime.grid(column=1, row=0)	
+
 
 def clearDTC():
 	os.system('./clearDTC.py')	
 
-#Create the Window
+#Create the master Window
 window = Tk()
 
 window.title("OBD-II Reader")
-
-#Window size
-#window.geometry("500x500")
 
 #Tab Creation and Labeling
 tabs = ttk.Notebook(window)
 tabDTC = ttk.Frame(tabs)
 tabCollectData = ttk.Frame(tabs)
 tabQuit = ttk.Frame(tabs)
-
+#notebook tabs for the various data types
 tabEngCoolant = ttk.Frame(tabs)
 tabEngRPM = ttk.Frame(tabs)
 tabSpeed = ttk.Frame(tabs)
@@ -241,7 +246,6 @@ tabEngRuntime = ttk.Frame(tabs)
 tabs.add(tabDTC, text="DTC")
 tabs.add(tabCollectData, text="Collect Data")
 tabs.add(tabQuit, text="Quit")
-
 tabs.add(tabEngCoolant, text="Engine coolant Temp")
 tabs.add(tabEngRPM, text="Engine RPM")
 tabs.add(tabSpeed, text="Vehicle Speed")
@@ -257,40 +261,34 @@ lblCollectData.grid(column=0, row=0)
 
 #Buttons added to each tab to update the graph
 EngCoolantUpdate = Button(tabEngCoolant, text="Update Graph", command=updateEngineCoolantTemp)
-#EngCoolantUpdate.grid(column=0, row = 0)
-EngCoolantUpdate.pack()#
+EngCoolantUpdate.pack()
 
 EngRPMUpdate = Button(tabEngRPM, text="Update Graph", command=updateEngineRPM)
-EngRPMUpdate.pack()#.grid(column=0, row = 0)
+EngRPMUpdate.pack()
 
 SpeedUpdate = Button(tabSpeed, text="Update Graph", command=updateVehicleSpeed)
-SpeedUpdate.pack()#.grid(column=0, row = 0)
+SpeedUpdate.pack()
 
 IntakeAirTempUpdate = Button(tabIntakeAirTemp, text="Update Graph", command=updateIntakeAirTemperature)
-IntakeAirTempUpdate.pack()#.grid(column=0, row = 0)
+IntakeAirTempUpdate.pack()
 
 ThrotPosUpdate = Button(tabThrotPos, text="Update Graph", command=updateThrottlePosition)
-ThrotPosUpdate.pack()#.grid(column=0, row = 0)
+ThrotPosUpdate.pack()
 
 EngLoadUpdate = Button(tabEngLoad, text="Update Graph", command=updateCalcEngineLoad)
-EngLoadUpdate.pack()#.grid(column=0, row = 0)
+EngLoadUpdate.pack()
 
 BaroPresUpdate = Button(tabBaroPres, text="Update Graph", command=updateAbsoluteBarometricPressure)
-BaroPresUpdate.pack()#.grid(column=0, row = 0)
+BaroPresUpdate.pack()
 
 EngRuntimeUpdate = Button(tabEngRuntime, text="Update Value", command=updateRuntime)
 EngRuntimeUpdate.grid(column=0, row = 1)
-
-
-#create label on Quit tab
-#lblQuit = ttk.Label(tabSET, text= 'label4')
-#lblQuit.grid(column=0, row=0)
 
 tabs.pack(expand=1, fill='both')
 
 #Button on the Quit tab that closes the GUI when pressed
 quitButton = Button(tabQuit, text="Quit", width=20, height=10,command=window.destroy)
-quitButton.grid(column=5, row=5)
+quitButton.pack()
 
 
 #Button to search for trouble codes
