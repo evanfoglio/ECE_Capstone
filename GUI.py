@@ -33,8 +33,8 @@ vol_response = "init"
 client = m.connect_mqtt(client_id, broker, port, username, password)
 
 #Global array variables for each type of data collected
-EngCoolant_x = [1, 2, 3, 4, 5, 6, 9]
-EngCoolant_y = [2, 4 ,6 ,8  ,4, 12, 14]
+EngCoolant_x = []
+EngCoolant_y = []
 
 EngRPM_x = []
 EngRPM_y = []
@@ -73,9 +73,7 @@ def plot(x, y, tab, ylabel):
 
 def updateEngineCoolantTemp():#engine_coolant_temp):
 	# Retrieve new data
-	#time, engine_coolant_temp = FFDP.get_EngineCoolantTemp(client)
-	time = 15
-	engine_coolant_temp = 8
+	time, engine_coolant_temp = FFDP.get_EngineCoolantTemp(client)
 	#append new data to the global array	
 	EngCoolant_x.append(time)
 	EngCoolant_y.append(engine_coolant_temp)
@@ -220,7 +218,7 @@ def updateRuntime():
 
 
 def clearDTC():
-	os.system('./clearDTC.py')	
+	DTCP.clearDTC(client)
 
 #Create the master Window
 window = Tk()
