@@ -291,6 +291,9 @@ tabs.pack(expand=1, fill='both')
 quitButton = Button(tabQuit, text="Quit", width=20, height=10,command=window.destroy)
 quitButton.pack()
 
+lblDTC = ttk.Label(tabDTC, text= 'Codes will appear here')
+lblDTC.grid(column=0, row=0)
+
 
 #Button to search for trouble codes
 DTCButton = Button(tabDTC, text="Look For Trouble Codes", command=runDTC)
@@ -298,10 +301,7 @@ DTCButton.grid(column=0, row = 1)
 
 DTC_clear_Button = Button(tabDTC, text="Clear Trouble Codes", command=clearDTC)
 DTC_clear_Button.grid(column=0, row = 3)
-
 #create label on DTC tab
-lblDTC = ttk.Label(tabDTC, text= 'Codes will appear here')
-lblDTC.grid(column=0, row=0)
 
 lblDTC_clear = ttk.Label(tabDTC, text= '')
 lblDTC_clear.grid(column=0, row=2)
