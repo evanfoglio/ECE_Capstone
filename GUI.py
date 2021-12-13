@@ -56,20 +56,23 @@ BaroPres_y = []
 
 #plotting function takes in the x,y data as well as the tab 
 # the plot is to go on
-def plot(x, y, tab, ylabel):
+def plot(x, y, tab, ylabel, title):
 	
-	fig = Figure(figsize = (5, 5), dpi = 100)
+	fig = Figure(figsize = (6, 6), dpi = 100, facecolor = '#d9d9d9')
 	plot1 = fig.add_subplot(111)
 	plot1.plot(x,y)
 	plot1.set_ylabel(ylabel)
 	plot1.set_xlabel("Time")
+	#rotate the X ticks to be readable
+	for tick in plot1.get_xticklabels():
+		tick.set_rotation(45)
+	plot1.title.set_text(title)
 	canvas = FigureCanvasTkAgg(fig, master = tab)
 	canvas.draw()
 	canvas.get_tk_widget().pack()
 	toolbar = NavigationToolbar2Tk(canvas, tab)
 	toolbar.update()
 	canvas.get_tk_widget().pack()
-
 
 def updateEngineCoolantTemp():#engine_coolant_temp):
 	# Retrieve new data
@@ -83,7 +86,7 @@ def updateEngineCoolantTemp():#engine_coolant_temp):
 	for child in tabEngCoolant.winfo_children()[1:]:
 		child.destroy()
 	#plot the new data on  the notebook tab
-	plot(EngCoolant_x, EngCoolant_y, tabEngCoolant, "Degree Celsius")
+	plot(EngCoolant_x, EngCoolant_y, tabEngCoolant, "Degree Celsius", "Engine Coolant Temperature")
 
 def updateEngineRPM():
         # Retrieve new data
@@ -98,7 +101,7 @@ def updateEngineRPM():
         for child in tabEngRPM.winfo_children()[1:]:
                 child.destroy()
         #plot the new data on  the notebook tab
-        plot(EngRPM_x, EngRPM_y, tabEngRPM, "RPM")
+        plot(EngRPM_x, EngRPM_y, tabEngRPM, "RPM", "Engine RPM")
 
 
 def updateVehicleSpeed():
@@ -114,7 +117,7 @@ def updateVehicleSpeed():
         for child in tabSpeed.winfo_children()[1:]:
                 child.destroy()
         #plot the new data on  the notebook tab
-        plot(Speed_x, Speed_y, tabSpeed, "Km/h")
+        plot(Speed_x, Speed_y, tabSpeed, "Km/h", "Vehicle Speed")
 
 
 def updateIntakeAirTemperature():
@@ -130,7 +133,7 @@ def updateIntakeAirTemperature():
         for child in tabIntakeAirTemp.winfo_children()[1:]:
                 child.destroy()
         #plot the new data on  the notebook tab
-        plot(IntakeAirTemp_x, IntakeAirTemp_y, tabIntakeAirTemp, "Degree Celsius")
+        plot(IntakeAirTemp_x, IntakeAirTemp_y, tabIntakeAirTemp, "Degree Celsius", "Intake Air Temperature")
 
 
 def updateThrottlePosition():
@@ -146,7 +149,7 @@ def updateThrottlePosition():
         for child in tabThrotPos.winfo_children()[1:]:
                 child.destroy()
         #plot the new data on  the notebook tab
-        plot(ThrotPos_x, ThrotPos_y, tabThrotPos, "%")
+        plot(ThrotPos_x, ThrotPos_y, tabThrotPos, "%", "Throttle Position")
 
 
 def updateCalcEngineLoad():
@@ -162,7 +165,7 @@ def updateCalcEngineLoad():
         for child in tabEngLoad.winfo_children()[1:]:
                 child.destroy()
         #plot the new data on  the notebook tab
-        plot(EngLoad_x, EngLoad_y, tabEngLoad, "%")
+        plot(EngLoad_x, EngLoad_y, tabEngLoad, "%", "Calculated Engine Load")
 
 
 def updateAbsoluteBarometricPressure():
@@ -178,7 +181,7 @@ def updateAbsoluteBarometricPressure():
         for child in tabBaroPres.winfo_children()[1:]:
                 child.destroy()
         #plot the new data on  the notebook tab
-        plot(BaroPres_x, BaroPres_y, tabBaroPres, "KPa")
+        plot(BaroPres_x, BaroPres_y, tabBaroPres, "KPa", "Absolute Barometric Pressure")
 
 
 
