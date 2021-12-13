@@ -44,7 +44,7 @@ void setup_MQTT() {
   client.setServer(mqtt_broker, mqtt_port);  
 }
 
-
+boolean message_flag = false;
 void callback(char* topic, byte* payload, unsigned int msg_length) {
   //When a MQTT message comes in, the gobal message variable is cleared out
   memset(glob_message, 0, sizeof glob_message);
@@ -53,6 +53,7 @@ void callback(char* topic, byte* payload, unsigned int msg_length) {
   for (int i = 0; i < msg_length; i++) {
       glob_message[i] = (char) payload[i];
   }
+  message_flag = true;
 }
 
 void reconnect() {
@@ -107,11 +108,12 @@ void loop(void) {
   String prev_msg = glob_message;
 
   //Waiting for MQTT message...
-  while (prev_msg == glob_message) {
+  while (!message_flag) {
     delay(100);
     //client.loop() updates the MQTT client
     client.loop();
   }
+  message_flag = false
 
   //remove all serial messages in the buffer
   serial_flush();//the function of Serial.flush was changed in Arduino 1.0 to not actually flush the buffer
