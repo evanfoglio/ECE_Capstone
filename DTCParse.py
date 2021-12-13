@@ -24,17 +24,20 @@ def sql_export(dtc):
 	finally:
 		if sqlcon:
 			sqlcon.close()
+
 def log(text):
 	#open log file with appened
 	f = open("log.txt", "a")
 	f.write(str(datetime.now())+ "\t"  + text + "\n")
 
 
-#Returns a string
+#Returns a string containing up to 3 error codes
 def detectDTC(client):
+
 	#global message_flag to indicate a new message
 	global message_flag 
 	message_flag = False
+
 	#define the on_message callback function
 	def on_message(client, userdata, msg):
                 message = "%s" % msg.payload.decode()
@@ -50,26 +53,22 @@ def detectDTC(client):
 	# >01 01
 	#Typical Response:
 	#41 01 81 07 65 04
-	####
-	#SEND REQUEST TBD
-	####
-	#prev_response = vol_response
+
 	client.loop()
+	#setup abillity to receive messages
 	m.subscribe(client, "OBDIIRec")
-	m.publish(client, "OBDIISend2", "01 01")
-	print("Sent 01 01")
-	####
-        # RECEIVE RESPONSE
-        ####
 	
-	#wait for a new MQTT message
+	#send "01 01" message to "OBDIISend2" topic
+	m.publish(client, "OBDIISend2", "01 01")
+	
+	#wait for a new MQTT reply
 	while (not message_flag):
 		client.loop()
+	#reset global flag
 	message_flag = False
 
 	#Respone comes as unicode,
 	str_response = str(vol_response)
-	print(str_response)
 	#separate received string into individule values
 	split_response = str_response.split()
 	
@@ -90,28 +89,25 @@ def detectDTC(client):
 		#sys.exit(0)
 		return "Error occured, please check the log.txt"		
 
-	#case for 0 codes
+	# if the 4th byte is "00" then there are no error codes
 	if(split_response[4] == '00'):
-		code = "No Codes"
-		sql_export(code)
-		return code
+		sql_export("No Error Codes")
+		return "No Error Codes"
 
+	#if the 4th byte is not zero, convert it into decimal
 	intErrorCode = int(split_response[3], 16)
+	
+	#most significant bit is a 1 if the check engine light is on
 	if intErrorCode < 0x80:
-		#Check Engine Lamp or MIL is not on
+		#Check Engine Lamp or MIL is not on,
+		#number of error codes is the 4th byte
 		nErrorCodes = split_response[3]	
 	else:
-		#lights are on
+		#check engine light is on
+		#4th byte - 0x80 is the number of error codes
         	nErrorCodes = intErrorCode - 0x80
 
 	#Find Actual trouble codes
-	#Send mode switch command
-
-	###
-	# > 03
-	###
-
-	prev_response = vol_response
 	client.loop()
 	#send 03 to Remote system to switch ELM327 Modes
 	m.publish(client, "OBDIISend2", '03')
@@ -119,18 +115,13 @@ def detectDTC(client):
 	while (not message_flag):
                 client.loop()
 	message_flag = False
-	str_response = str(vol_response)
+	str_response = vol_response
 
 	#possible response:
 	#43 01 33 00 00 00 00
-	# 43 says its a mode 3 response,
 	
 	#error check, 43 indicates a response in mode 3
-	print(str_response)
-	str_response = str_response.split()
-	
-	print(str_response)
-
+	str_response = str_response.split()	
 	if str_response[1] != '43':
 	        #log the error
 		log("Invalid reply to 03 in DTCParse.py: " + str(str_response))
@@ -140,8 +131,9 @@ def detectDTC(client):
 	
 	# Next 6 bytes are read in pairs,
         # Ex: 0133 0000 0000
-        #by standard it is padded with 0s, 0000 do not represent trouble codes
+        #by standard it is padded with 0s, 0000 does not represent trouble codes
 	str_response.pop(0) # remove the first value, it is just used for confirmation
+	#convert remeaining bytes to two byte pairs
 	refined_response = [str_response[0] + str_response[1], str_response[2] + str_response[3], str_response[4] + str_response[5]]
 	#clear out any 0000 codes
 	refined_response = [i for i in refined_response if i != "0000"]	
@@ -165,22 +157,23 @@ def detectDTC(client):
 		"E":"U2",
 		"F":"U3"}
 	
-	#bytes of the retuen values are combined and decoded usinf the DTC_dict, values found
+	#bytes of the return values are combined and decoded using the DTC_dict, values found
 	# in ELM327 data sheet
-	parsedDTC = [0, 0, 0]
+	#array to hold final code values
+	parsedDTC = []
 	for i in range(len(refined_response)): 
-		parsedDTC[i] = DTC_dict[refined_response[i][0]] + refined_response[i][1:]	
+		parsedDTC.append(DTC_dict[refined_response[i][0]] + refined_response[i][1:])	
 
 	#combine codes into 1 string
 	combined_DTC = ""
 	for i in parsedDTC:
-		combined_DTC = combined_DTC + "\t" + i
+		combined_DTC = combined_DTC + "\t" + str(i)
 	#export codes to SQL db	
 	sql_export(combined_DTC)
 	return combined_DTC	
 
 
-def clearDTC():	
+def clearDTC(client):	
 	#global message_flag to indicate a new message
         global message_flag
         message_flag = False
@@ -191,18 +184,20 @@ def clearDTC():
                 global message_flag
                 message_flag = True
                 vol_response = message
+	#set the callback function
         client.on_message = on_message
         m.subscribe(client, "OBDIIRec")
-        client.on_message = on_message
-
+	
+	#sending a "04" to the ELM instructs it to clear error codes per the ELM327 datasheet
         m.publish(client, "OBDIISend2", "04")
-
+	
+	#wait for a new message	
         while (not message_flag):
-                time.sleep(.1)
                 client.loop()
+	#reset global message flag
         message_flag = False
-
-        response = (str(vol_response)).split()
+        response = (vol_response).split()
+        #0x44 is a confirmation that codes were cleared
         if(response[1] != '44'):
                 log("Invalid reply to 04 in clearDTC.py: " + str(response))
                 print("Invalid reply to 04 in clearDTC.py: " + str(response))
