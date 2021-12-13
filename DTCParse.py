@@ -73,6 +73,15 @@ def detectDTC(client):
 	#separate received string into individule values
 	split_response = str_response.split()
 	
+	if((len(split_response) < 4)):
+                #invalid relpy
+                #print("Invalid reply after first message")
+                log("Invalid reply to 01 01 in DTCParse.py: " + str(split_response))
+                print("Invalid reply to 01 01 in DTCParse.py: " + str(split_response))
+                #sys.exit(0)
+                return "Error occured, please check the log.txt"
+
+
 	if ((split_response[2] != '41') and (split_response[3] != '01')):
 		#invalid relpy
 		#print("Invalid reply after first message")
