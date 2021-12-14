@@ -1,21 +1,15 @@
 #!/usr/bin/python3
 
-#import tkinter as tk
 from tkinter import *
 from tkinter import ttk
-import os
-from PIL import ImageTk, Image
 import time
-import sqlite3
 import mqtt as m
 import random
 import matplotlib.pyplot as plt
-import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 
 import DTCParse as DTCP
-from getLast import get_last
 import FFDParse as FFDP
 
 #Broker Credentials
@@ -57,19 +51,34 @@ BaroPres_y = []
 #plotting function takes in the x,y data as well as the tab 
 # the plot is to go on
 def plot(x, y, tab, ylabel, title):
-	
+	#Create the figure,
+	# 6 inch by 6 inch
+	# dots per inch, dpi, 100
+	# facecolor to match default gui color
 	fig = Figure(figsize = (6, 6), dpi = 100, facecolor = '#d9d9d9')
+
 	plot1 = fig.add_subplot(111)
+
+	#plot the data
 	plot1.plot(x,y)
+	
+	#set labels
 	plot1.set_ylabel(ylabel)
 	plot1.set_xlabel("Time")
+	
 	#rotate the X ticks to be readable
 	for tick in plot1.get_xticklabels():
 		tick.set_rotation(45)
+	
 	plot1.title.set_text(title)
+	
+	#set the plot to be on the passed notebook tab
 	canvas = FigureCanvasTkAgg(fig, master = tab)
 	canvas.draw()
+	#pack the gragh
 	canvas.get_tk_widget().pack()
+	
+	#configure the toolbar to affect the plot and set it to the passed tab
 	toolbar = NavigationToolbar2Tk(canvas, tab)
 	toolbar.update()
 	canvas.get_tk_widget().pack()
@@ -187,17 +196,20 @@ def updateAbsoluteBarometricPressure():
 
 #runDTC finds trouble codes and updates the label on the DTC notebook tab
 def runDTC():
+	#find trouble codes
 	DTC_code = DTCP.detectDTC(client)
-	#DTC_code = get_last("DTC.db", "DTC")
-	#DTC_code = str(DTC_code[0][0])	
+	#get the label
 	global lblDTC
+	#destroy old label
 	lblDTC.destroy() 
-	lblDTC = ttk.Label(tabDTC, text=DTC_code)	
+	#create new label with found/not found codes
+	lblDTC = ttk.Label(tabDTC, text=DTC_code)
+	#place the label	
 	lblDTC.grid(column=0, row=0)
 
 #runFFD runs all the update data functions allowing faster data collection 
 def runFFD():
-
+	#call all update functions for mass data collection
 	updateEngineCoolantTemp()
 	updateEngineRPM()
 	updateVehicleSpeed()
@@ -209,7 +221,9 @@ def runFFD():
 
 #Retrives the current engine runtime and updates the label on Engine Runtime tab
 def updateRuntime():
+	#get runtime
 	runtime = FFDP.get_Runtime(client)
+	#get the label
 	global lblRuntime
 	#destroy the old label
 	lblRuntime.destroy()
@@ -217,6 +231,7 @@ def updateRuntime():
 	runtime = str(runtime) + " Seconds" 
 	#create the new label
 	lblRuntime = ttk.Label(tabEngRuntime, text=runtime)
+	#place the new label
 	lblRuntime.grid(column=1, row=0)	
 
 
@@ -229,10 +244,14 @@ window = Tk()
 window.title("OBD-II Reader")
 
 #Tab Creation and Labeling
+#create the tabs based on the master window
 tabs = ttk.Notebook(window)
+
+#create specific tabs based on the tabs object
 tabDTC = ttk.Frame(tabs)
 tabCollectData = ttk.Frame(tabs)
 tabQuit = ttk.Frame(tabs)
+
 #notebook tabs for the various data types
 tabEngCoolant = ttk.Frame(tabs)
 tabEngRPM = ttk.Frame(tabs)
@@ -287,10 +306,11 @@ EngRuntimeUpdate.grid(column=0, row = 1)
 
 tabs.pack(expand=1, fill='both')
 
-#Button on the Quit tab that closes the GUI when pressed
+#Button on the Quit tab that closes the GUI when pressed, destroys master window
 quitButton = Button(tabQuit, text="Quit", width=20, height=10,command=window.destroy)
 quitButton.pack()
 
+#create label where the DTC codes will be placed
 lblDTC = ttk.Label(tabDTC, text= 'Codes will appear here')
 lblDTC.grid(column=0, row=0)
 
@@ -299,20 +319,23 @@ lblDTC.grid(column=0, row=0)
 DTCButton = Button(tabDTC, text="Look For Trouble Codes", command=runDTC)
 DTCButton.grid(column=0, row = 1)
 
+#create button to clear the DTC codes, place on the DTC tab
 DTC_clear_Button = Button(tabDTC, text="Clear Trouble Codes", command=clearDTC)
 DTC_clear_Button.grid(column=0, row = 3)
-#create label on DTC tab
 
+#create clear DTC label on DTC tab
 lblDTC_clear = ttk.Label(tabDTC, text= '')
 lblDTC_clear.grid(column=0, row=2)
 
+#create label for runtime value to be updated to
 lblRuntime = ttk.Label(tabEngRuntime, text='Value will appear here')
 lblRuntime.grid(column=0, row=0)
 
+#create button to run mass collect data
 CollectData = Button(tabCollectData, text="Collect New Data", command=runFFD)
 CollectData.grid(column=0, row = 0)
 
-
+#master window loop
 window.mainloop()
 
 
