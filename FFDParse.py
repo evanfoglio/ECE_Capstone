@@ -25,20 +25,21 @@ def one_byte_response(cmd, client):
 	m.publish(client, "OBDIISend2", at_cmd)
 	
 	#RECEIVE 41 cmd data
-	#global message_flag
+	#wait for global message_flag
 	while (not message_flag):
                 client.loop()
+	#reset flag
 	message_flag = False
 		
 	response = (str(vol_response)).split()
-	
+	#check to make sure it fits min length
 	if((len(response) < 4)):
                 #bad response
                 log("Invalid reply to 01 " + cmd + " in FFDParse.py: " + str(response))
                 print("Invalid reply to 01 " + cmd + " in FFDParse.py: " + str(response))
                 sys.exit(0)
 
-	
+	#check to make sure response is valid relpy
 	if response[2] != '41' and response[3] != cmd:
 		#bad response
 		log("Invalid reply to 01 " + cmd + " in FFDParse.py: " + str(response))
@@ -69,24 +70,33 @@ def two_byte_response(cmd, client):
         #RECEIVE 41 cmd data
 	while (not message_flag):
 		client.loop()
+	#reset global message flag
 	message_flag = False
 	response = (str(vol_response)).split()
-
+	#check to make sure it fits min length
+	if((len(response) < 4)):
+                #bad response
+		log("Invalid reply to 01 " + cmd + " in FFDParse.py: " + str(response))
+		print("Invalid reply to 01 " + cmd + " in FFDParse.py: " + str(response))
+		sys.exit(0)
+	#check to make sure response is valid relpy
 	if response[2] != '41' and response[3] != cmd:
                 #bad response
                 log("Invalid reply to 01 " + cmd + " in FFDParse.py: " + str(response))
                 print("Invalid reply to 01 " + cmd + " in FFDParse.py: " + str(response))
                 sys.exit(0)
-	else:  	#Return 3rd byte
+	else:  	#Return 3rd and 4th byte
 		return [response[4], response[5]]
 
-
+#log func for logging errors
 def log(text):
         #open log file with appened
         f = open("log.txt", "a")
         f.write(str(datetime.now())+ "\t"  + text + "\n")
 
 
+#All "get_X" functions querry with their specific PID and equation
+# for translating the bytes to the actual value
 def get_EngineCoolantTemp(client):
 	engine_coolant_temp = int(one_byte_response("05", client), 16) - 40
 	sql_export("FFD.db", "EngCoolTemp", "temp", engine_coolant_temp)
