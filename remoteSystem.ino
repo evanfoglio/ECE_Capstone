@@ -8,17 +8,18 @@
 char glob_message[MSG_BUFFER_SIZE] = "Initial Value";
 
 //Wifi Credentials
-const char* ssid = "Foglio2.4"; //Wifi Name
-const char* password = "writerheight285";//Wifi password
-//const char* ssid = "Evans iphone";
-//const char* password = "12345678";
+//const char* ssid = "Foglio2.4"; //Wifi Name
+//const char* password = "writerheight285";//Wifi password
+//Hotspot credentials
+const char* ssid = "Evans iphone";
+const char* password = "12345678";
 
 
 // MQTT Broker
-const char *mqtt_broker = "broker.mqtt-dashboard.com";
+const char *mqtt_broker = "24.198.103.248";
 const char *topic = "OBDIIRec";
-const char *mqtt_username = "XXXXX";
-const char *mqtt_password = "public";
+const char *mqtt_username = "evan";
+const char *mqtt_password = "Capstone2021";
 const int mqtt_port = 1883;
 
 
@@ -44,6 +45,7 @@ void setup_MQTT() {
   client.setServer(mqtt_broker, mqtt_port);  
 }
 
+//Set up callback function
 boolean message_flag = false;
 void callback(char* topic, byte* payload, unsigned int msg_length) {
   //When a MQTT message comes in, the gobal message variable is cleared out
@@ -56,14 +58,14 @@ void callback(char* topic, byte* payload, unsigned int msg_length) {
   message_flag = true;
 }
 
+
 void reconnect() {
   // Loop until we're reconnected
   while (!client.connected()) {
-    // Create a random client ID
-    String clientId = "ESP8266Client-";
-    clientId += String(random(0xffff), HEX);
+    // Create a client ID
+    String clientId = "ESP-OBD2";
     // Attempt to connect
-    if (client.connect(clientId.c_str())) {
+    if (client.connect(clientId.c_str(), mqtt_username, mqtt_password)) {
       // Once connected, publish an announcement
       //HERE IS WHAT HAPPENS IF WE RECONNECT
     } else {
@@ -85,7 +87,6 @@ void setup() {
   //Start serial communication using 9600 baud
   Serial.begin(9600);
   setup_wifi();
-  setup_Serial();
   setup_MQTT();
 }
 
@@ -103,10 +104,7 @@ void loop(void) {
 
   //ATcommand is used to store the value of the global message so it does not change while it is being used
   char ATcommand[MSG_BUFFER_SIZE];
-  
-  //used to compare and see if the current global message is a new message.
-  String prev_msg = glob_message;
-
+ 
   //Waiting for MQTT message...
   while (!message_flag) {
     delay(100);
@@ -117,7 +115,8 @@ void loop(void) {
 
   //remove all serial messages in the buffer
   serial_flush();//the function of Serial.flush was changed in Arduino 1.0 to not actually flush the buffer
-  //coppy the global message contents into ATcommand array for printing
+  
+  //copy the global message contents into ATcommand array for printing
   for (int i = 0; i < sizeof glob_message ; i++) {
     ATcommand[i] = glob_message[i];
 
@@ -141,7 +140,7 @@ void loop(void) {
     index++;
   }
   if (index > 0) { // if there was a response, publish the message
-    snprintf (msg, index, UART_Response);
+    snprintf (msg, index, UART_Response); //write index number of bytes from UART Response to msg
     client.publish("OBDIIRec", msg);
     delay(100);
   }
