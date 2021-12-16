@@ -8,10 +8,10 @@
 char glob_message[MSG_BUFFER_SIZE] = "Initial Value";
 
 //Wifi Credentials
-const char* ssid = "Foglio2.4"; //Wifi Name
-const char* password = "writerheight285";//Wifi password
-//const char* ssid = "Evans iphone";
-//const char* password = "12345678";
+//const char* ssid = "Foglio2.4"; //Wifi Name
+//const char* password = "writerheight285";//Wifi password
+const char* ssid = "Evans iphone";
+const char* password = "12345678";
 
 
 // MQTT Broker
