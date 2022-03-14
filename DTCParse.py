@@ -117,6 +117,11 @@ def detectDTC(client):
 	message_flag = False
 	str_response = vol_response
 
+	print(str_response )
+	print(type(str_response))
+
+	str_response = str_response + " 00" + " 00"
+	
 	#possible response:
 	#43 01 33 00 00 00 00
 	
@@ -133,6 +138,7 @@ def detectDTC(client):
         # Ex: 0133 0000 0000
         #by standard it is padded with 0s, 0000 does not represent trouble codes
 	str_response.pop(0) # remove the first value, it is just used for confirmation
+	
 	#convert remeaining bytes to two byte pairs
 	refined_response = [str_response[0] + str_response[1], str_response[2] + str_response[3], str_response[4] + str_response[5]]
 	#clear out any 0000 codes
